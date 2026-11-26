@@ -207,6 +207,7 @@ class MainActivity : FragmentActivity() {
     var moduleActionId by mutableStateOf<String?>(null)
     var amoledModeState = mutableStateOf(false)
     var navBarEnabled = mutableStateOf(true)
+    var senseiTheme by mutableStateOf(com.senseisu.ssu.ui.sensei.loadSenseiTheme(this))
     private val handler = Handler(Looper.getMainLooper())
 
     val moduleViewModel: ModuleViewModel by viewModels()
@@ -214,6 +215,11 @@ class MainActivity : FragmentActivity() {
 
     override fun attachBaseContext(newBase: Context?) {
         super.attachBaseContext(newBase?.let { LocaleHelper.applyLanguage(it) })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        senseiTheme = com.senseisu.ssu.ui.sensei.loadSenseiTheme(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -260,8 +266,15 @@ class MainActivity : FragmentActivity() {
         if(intent != null)
             handleIntent(intent)
 
-        setContent { Box(modifier = Modifier.fillMaxSize()) {
-            KernelSUTheme(amoledMode = amoledModeState.value) {
+        setContent { com.senseisu.ssu.ui.sensei.SenseiBackground(
+            uriString = senseiTheme.bgUri,
+            blur = senseiTheme.blur,
+        ) { Box(modifier = Modifier.fillMaxSize()) {
+            KernelSUTheme(
+                darkTheme = when (senseiTheme.mode) { 1 -> false; 2 -> true; else -> androidx.compose.foundation.isSystemInDarkTheme() },
+                dynamicColor = senseiTheme.dynamic,
+                amoledMode = amoledModeState.value
+            ) {
                 var showSplash by remember { mutableStateOf(false) }  // 启动动画已关闭
                 var splashRotationTarget by remember { mutableStateOf(0f) }
                 val splashRotation by animateFloatAsState(
@@ -563,7 +576,7 @@ class MainActivity : FragmentActivity() {
 
             AppLockOverlay(amoledModeState.value)
 
-        } } // Box & setContent
+        } } } // Box & setContent
     } // onCreate
 
     @Composable

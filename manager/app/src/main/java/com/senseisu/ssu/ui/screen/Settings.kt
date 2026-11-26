@@ -639,6 +639,27 @@ private fun SecurityCard(
                 )
             }
 
+            var showTheme by remember { mutableStateOf(false) }
+            ListItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { showTheme = true },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                leadingContent = { Icon(Icons.Filled.Brush, null) },
+                headlineContent = {
+                    Text(
+                        text = "主题设置",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                supportingContent = { Text("主题模式 · 动态颜色 · 背景") }
+            )
+            if (showTheme) {
+                com.senseisu.ssu.ui.sensei.SenseiThemeSettingsScreen(onClose = { showTheme = false })
+            }
+
             ListItem(
                 modifier = Modifier
                     .fillMaxWidth()
