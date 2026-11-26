@@ -15,3 +15,6 @@ target/
 # IDE
 .idea/
 *.iml
+
+# 本地凭证
+.ssu-telegram

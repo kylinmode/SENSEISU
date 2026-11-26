@@ -73,16 +73,11 @@ gh release create "v$VER" \
 URL="https://github.com/$REPO/releases/tag/v$VER"
 
 # ── 4. 发 Telegram ──────────────────────────────────────────
-if [ -n "${BOT_TOKEN:-}" ] && [ -n "${CHAT_ID:-}" ]; then
+if [ -x "$ROOT/scripts/ssu-notify.sh" ] && [ -f "$HOME/.ssu-telegram" ]; then
   say "发送 Telegram 通知"
-  curl -s --max-time 30 -X POST \
-    "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-    -d "chat_id=${CHAT_ID}" \
-    -d "text=SenseiSU v${VER} 已发布
-${URL}
-${NOTES:0:200}" >/dev/null && echo "  通知已发送"
+  "$ROOT/scripts/ssu-notify.sh" --release "v$VER" || echo "  （通知发送失败，已跳过）"
 else
-  echo "  （未配置 BOT_TOKEN/CHAT_ID，跳过通知）"
+  echo "  （未配置 ~/.ssu-telegram，跳过通知）"
 fi
 
 # ── 5. 输出镜像地址（jsDelivr，国内可用）────────────────────
