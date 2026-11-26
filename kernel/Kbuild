@@ -110,19 +110,11 @@ $(info -- KernelSU-Next Git repo detected at: $(GIT_ROOT))
 endif
 endif
 
-# Calculate version if git version is available
-ifdef KSU_GIT_VERSION_VALID
-# ksu_version: major * 30000 + git version for historical reasons
-$(eval KSU_VERSION=$(shell cat $(srctree)/../version.txt 2>/dev/null || echo 10001))
-$(info -- KernelSU-Next version: $(KSU_VERSION))
+# 版本号统一取仓库根的 version.txt（不依赖 git，DDK/CI 构建也正确）
+SSU_VERSION_FILE := $(MDIR)/../kernel-version.txt
+KSU_VERSION := $(shell cat $(SSU_VERSION_FILE) 2>/dev/null || echo 30001)
+$(info -- SenseiSU version: $(KSU_VERSION))
 ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
-else
-# If there is no .git directory, use default version
-$(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU-Next a git repository!")
-KSU_VERSION_FALLBACK := 1
-$(info -- KernelSU-Next version fallback: $(KSU_VERSION_FALLBACK))
-ccflags-y += -DKSU_VERSION=$(KSU_VERSION_FALLBACK)
-endif
 
 ifdef KSU_GIT_VERSION_VALID
 $(eval KSU_VERSION_TAG=$(KSU_GIT_TAG))

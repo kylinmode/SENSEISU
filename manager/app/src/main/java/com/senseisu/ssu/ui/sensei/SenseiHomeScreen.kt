@@ -27,8 +27,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.SettingsBackupRestore
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.DeveloperBoard
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -293,26 +299,39 @@ private fun PowerMenu() {
         runCatching { com.topjohnwu.superuser.Shell.cmd(cmd).exec() }
             .onFailure { android.widget.Toast.makeText(ctx, "执行失败", android.widget.Toast.LENGTH_SHORT).show() }
     }
+
+    val items = listOf(
+        Triple("重启系统", Icons.Filled.RestartAlt, "svc power reboot || reboot"),
+        Triple("软重启（仅重启界面）", Icons.Filled.Autorenew, "setprop ctl.restart zygote"),
+        Triple("重启到 Recovery", Icons.Filled.SettingsBackupRestore, "reboot recovery"),
+        Triple("重启到 Bootloader", Icons.Filled.DeveloperBoard, "reboot bootloader"),
+        Triple("重启到 9008（EDL）", Icons.Filled.Bolt, "reboot edl"),
+    )
+
     Box {
         IconAction(Icons.Filled.PowerSettingsNew) { expanded = true }
         androidx.compose.material3.DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White),
+            shape = RoundedCornerShape(22.dp),
+            containerColor = Sensei.Card,
+            tonalElevation = 0.dp,
+            shadowElevation = 10.dp,
+            modifier = Modifier.width(240.dp),
         ) {
-            listOf(
-                "重启系统" to "svc power reboot || reboot",
-                "重启到 Recovery" to "reboot recovery",
-                "重启到 Bootloader" to "reboot bootloader",
-            ).forEach { (label, cmd) ->
-                androidx.compose.material3.DropdownMenuItem(
+            items.forEach { (label, icon, cmd) ->
+                DropdownMenuItem(
                     text = { Text(label, color = Sensei.Ink, fontSize = 14.sp) },
+                    leadingIcon = {
+                        Icon(icon, contentDescription = null, tint = Sensei.InkSoft, modifier = Modifier.size(18.dp))
+                    },
                     onClick = { expanded = false; run(cmd) },
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun IconAction(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {

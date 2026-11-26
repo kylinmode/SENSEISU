@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 
@@ -38,7 +39,7 @@ fun Color.blend(other: Color, ratio: Float): Color {
 fun KernelSUTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     amoledMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -82,7 +83,8 @@ fun KernelSUTheme(
     )
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colorScheme.sensei(darkTheme),
+        shapes = SenseiShapes,
         typography = Typography,
         content = content
     )
@@ -116,3 +118,63 @@ private fun SystemBarStyle(
         )
     }
 }
+
+/** 蔚蓝档案配色（全局覆盖，所有页面生效） */
+private object SenseiScheme {
+    val Sky = androidx.compose.ui.graphics.Color(0xFF3E9BE0)
+    val SkyDeep = androidx.compose.ui.graphics.Color(0xFF1F6FB2)
+    val SkySoft = androidx.compose.ui.graphics.Color(0xFFBFE2FB)
+    val Pink = androidx.compose.ui.graphics.Color(0xFFF58AB8)
+    val PinkWash = androidx.compose.ui.graphics.Color(0xFFFDE7F0)
+    val Paper = androidx.compose.ui.graphics.Color(0xFFF2FAFF)
+    val PaperDeep = androidx.compose.ui.graphics.Color(0xFFE4F1FE)
+    val Ink = androidx.compose.ui.graphics.Color(0xFF1B2A38)
+    val InkSoft = androidx.compose.ui.graphics.Color(0xFF6B8199)
+    val NightBg = androidx.compose.ui.graphics.Color(0xFF101A24)
+    val NightSurface = androidx.compose.ui.graphics.Color(0xFF17242F)
+}
+
+private val SenseiShapes = androidx.compose.material3.Shapes(
+    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+    small = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+    large = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+    extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+)
+
+private fun androidx.compose.material3.ColorScheme.sensei(dark: Boolean): androidx.compose.material3.ColorScheme =
+    if (!dark) copy(
+        primary = SenseiScheme.Sky,
+        onPrimary = androidx.compose.ui.graphics.Color.White,
+        primaryContainer = SenseiScheme.SkySoft,
+        onPrimaryContainer = SenseiScheme.SkyDeep,
+        secondary = SenseiScheme.Pink,
+        secondaryContainer = SenseiScheme.PinkWash,
+        onSecondaryContainer = SenseiScheme.Ink,
+        background = SenseiScheme.Paper,
+        onBackground = SenseiScheme.Ink,
+        surface = androidx.compose.ui.graphics.Color.White,
+        onSurface = SenseiScheme.Ink,
+        surfaceVariant = SenseiScheme.PaperDeep,
+        onSurfaceVariant = SenseiScheme.InkSoft,
+        surfaceContainer = androidx.compose.ui.graphics.Color.White,
+        surfaceContainerHigh = SenseiScheme.Paper,
+        surfaceContainerLow = SenseiScheme.Paper,
+        surfaceContainerLowest = androidx.compose.ui.graphics.Color.White,
+        surfaceContainerHighest = SenseiScheme.PaperDeep,
+        outline = SenseiScheme.SkySoft,
+    ) else copy(
+        primary = SenseiScheme.Sky,
+        onPrimary = androidx.compose.ui.graphics.Color.White,
+        primaryContainer = SenseiScheme.SkyDeep,
+        onPrimaryContainer = SenseiScheme.SkySoft,
+        secondary = SenseiScheme.Pink,
+        secondaryContainer = androidx.compose.ui.graphics.Color(0xFF3A2430),
+        background = SenseiScheme.NightBg,
+        onBackground = androidx.compose.ui.graphics.Color(0xFFE6F1F8),
+        surface = SenseiScheme.NightSurface,
+        onSurface = androidx.compose.ui.graphics.Color(0xFFE6F1F8),
+        surfaceVariant = androidx.compose.ui.graphics.Color(0xFF1F2E3B),
+        onSurfaceVariant = SenseiScheme.SkySoft,
+        outline = androidx.compose.ui.graphics.Color(0xFF2C3E4E),
+    )

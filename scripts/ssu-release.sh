@@ -24,11 +24,18 @@ gh auth status >/dev/null 2>&1 || die "gh 未登录"
 
 # ── 1. 版本号 +256 并写回 ───────────────────────────────────
 VERFILE="$ROOT/version.txt"
+KVERFILE="$ROOT/kernel-version.txt"
 OLD_VER=$(cat "$VERFILE" 2>/dev/null || echo 10001)
 NEW_VER=$((OLD_VER + 256))
 echo "$NEW_VER" > "$VERFILE"
 export SSU_VERSION_CODE="$NEW_VER"
 say "版本号：$OLD_VER → $NEW_VER（+256，已写入 version.txt）"
+if [ -f "$KVERFILE" ]; then
+  OLD_KVER=$(cat "$KVERFILE")
+  NEW_KVER=$((OLD_KVER + 1))
+  echo "$NEW_KVER" > "$KVERFILE"
+  say "内核版本号：$OLD_KVER → $NEW_KVER（+1，已写入 kernel-version.txt）"
+fi
 
 # ── 2. 收集产物 ─────────────────────────────────────────────
 STAGE=$(mktemp -d)
