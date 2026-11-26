@@ -18,6 +18,22 @@ on:
         default: ''
         type: string
   workflow_dispatch:
+    inputs:
+      manager_package:
+        description: 'manager package name'
+        required: false
+        default: 'com.senseisu.ssu'
+        type: string
+      expected_manager_size:
+        description: 'expected signature size'
+        required: false
+        default: '0x308'
+        type: string
+      expected_manager_hash:
+        description: 'expected signature hash'
+        required: false
+        default: 'd09bd720221f30816788eb1e1979af3a8514041da86d8032df75b2cd2ef9cd7c'
+        type: string
 jobs:
   build-lkm-ksu:
     strategy:
@@ -34,9 +50,9 @@ jobs:
     uses: ./.github/workflows/ddk-lkm-ksu.yml
     with:
       kmi: ${{ matrix.kmi }}
-      manager_package: ${{ inputs.manager_package || '' }}
-      expected_manager_size: ${{ inputs.expected_manager_size || '' }}
-      expected_manager_hash: ${{ inputs.expected_manager_hash || '' }}
+      manager_package: ${{ inputs.manager_package }}
+      expected_manager_size: ${{ inputs.expected_manager_size }}
+      expected_manager_hash: ${{ inputs.expected_manager_hash }}
   
   build-lkm-susfs:
     strategy:
