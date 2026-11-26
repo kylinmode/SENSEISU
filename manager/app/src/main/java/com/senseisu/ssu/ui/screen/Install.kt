@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -66,13 +67,29 @@ import java.util.Locale
 @Destination<RootGraph>
 @Composable
 fun InstallScreen(navigator: DestinationsNavigator) {
-    // 直接用上游布局（单一标题栏），外观通过容器色与底部按钮微调
-    InstallContent(navigator)
+    var tab by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.foundation.layout.Column(
+        androidx.compose.ui.Modifier
+            .fillMaxSize()
+            .background(androidx.compose.ui.graphics.Color(0xFFF5FAFF))
+    ) {
+        com.senseisu.ssu.ui.sensei.SenseiInstallHeader(
+            selectedTab = tab,
+            onSelectTab = { tab = it },
+            onBack = { runCatching { navigator.navigateUp() } },
+        )
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.weight(1f)) {
+            when (tab) {
+                1 -> com.senseisu.ssu.ui.sensei.SenseiLocalFlashContent()
+                else -> InstallContent(navigator, showChrome = false)
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InstallContent(navigator: DestinationsNavigator) {
+private fun InstallContent(navigator: DestinationsNavigator, showChrome: Boolean = true) {
 
     var installMethod by remember {
         mutableStateOf<InstallMethod?>(null)
@@ -190,14 +207,13 @@ private fun InstallContent(navigator: DestinationsNavigator) {
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color(0xFFF5FAFF),
         topBar = {
-            TopBar(
-                onBack = dropUnlessResumed { navigator.popBackStack() },
-                onLkmUpload = if (kernelVersion.isGKI()) onLkmUpload else null,
-                scrollBehavior = scrollBehavior
-            )
-        },
-        bottomBar = {
-            com.senseisu.ssu.ui.sensei.SenseiLocalFlashBar()
+            if (showChrome) {
+                TopBar(
+                    onBack = dropUnlessResumed { navigator.popBackStack() },
+                    onLkmUpload = if (kernelVersion.isGKI()) onLkmUpload else null,
+                    scrollBehavior = scrollBehavior
+                )
+            }
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { innerPadding ->
