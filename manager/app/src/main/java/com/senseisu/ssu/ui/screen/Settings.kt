@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.compose.ui.graphics.Color
@@ -188,6 +189,22 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 蔚蓝档案风格页眉
+            Column(Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)) {
+                Text(
+                    "SENSEI / CONFIG",
+                    fontSize = 9.sp,
+                    letterSpacing = 2.sp,
+                    color = androidx.compose.ui.graphics.Color(0xFF9DB2C6),
+                )
+                Text(
+                    "设置",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = androidx.compose.ui.graphics.Color(0xFF1B2A38),
+                )
+            }
+
             if (ksuVersion != null) {
                 KernelFeaturesCard(
                     suCompatStatus = suCompatStatus,

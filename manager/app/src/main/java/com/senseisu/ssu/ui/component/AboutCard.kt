@@ -41,13 +41,16 @@ private const val PROJECT_URL = "https://github.com/kylinmode/SENSEISU"
 fun AboutCard() {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-        ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "SENSEI SU / TERMINAL",
+                fontSize = 9.sp,
+                letterSpacing = 2.sp,
+                color = androidx.compose.ui.graphics.Color(0xFF9DB2C6),
+            )
+            Spacer(Modifier.height(10.dp))
             AboutCardContent()
         }
     }

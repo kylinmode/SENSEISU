@@ -103,7 +103,7 @@ fun SenseiBottomBar(
                             ) { go(index) },
                     ) {
                         Icon(
-                            imageVector = if (active) item.iconSelected else item.iconNotSelected,
+                            imageVector = item.iconNotSelected,
                             contentDescription = null,
                             tint = if (active) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant,

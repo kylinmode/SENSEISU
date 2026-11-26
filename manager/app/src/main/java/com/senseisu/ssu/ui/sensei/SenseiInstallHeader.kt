@@ -52,7 +52,15 @@ fun SenseiInstallHeader(
                     tint = Color(0xFF1B2B44),
                 )
             }
-            Text("安装", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1B2B44))
+            Column {
+                Text(
+                    "SENSEI / INSTALL",
+                    fontSize = 9.sp,
+                    letterSpacing = 2.sp,
+                    color = Color(0xFF9DB2C6),
+                )
+                Text("安装", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1B2B44))
+            }
         }
 
         // 胶囊：水平居中
