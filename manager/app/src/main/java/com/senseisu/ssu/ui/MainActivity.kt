@@ -207,7 +207,7 @@ class MainActivity : FragmentActivity() {
     var moduleActionId by mutableStateOf<String?>(null)
     var amoledModeState = mutableStateOf(false)
     var navBarEnabled = mutableStateOf(true)
-    var senseiTheme by mutableStateOf(com.senseisu.ssu.ui.sensei.loadSenseiTheme(this))
+    var senseiTheme by mutableStateOf(com.senseisu.ssu.ui.sensei.SenseiThemeState())
     private val handler = Handler(Looper.getMainLooper())
 
     val moduleViewModel: ModuleViewModel by viewModels()
@@ -219,10 +219,16 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        senseiTheme = com.senseisu.ssu.ui.sensei.loadSenseiTheme(this)
+        refreshSenseiTheme()
+    }
+
+    private fun refreshSenseiTheme() {
+        senseiTheme = runCatching { com.senseisu.ssu.ui.sensei.loadSenseiTheme(this) }
+            .getOrDefault(com.senseisu.ssu.ui.sensei.SenseiThemeState())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        refreshSenseiTheme()
 
         super.onCreate(savedInstanceState)
 
@@ -267,6 +273,10 @@ class MainActivity : FragmentActivity() {
             handleIntent(intent)
 
         setContent { Box(modifier = Modifier.fillMaxSize()) {
+            com.senseisu.ssu.ui.sensei.SenseiBackgroundLayer(
+                uriString = senseiTheme.bgUri,
+                blur = senseiTheme.blur,
+            )
             KernelSUTheme(
                 darkTheme = when (senseiTheme.mode) { 1 -> false; 2 -> true; else -> androidx.compose.foundation.isSystemInDarkTheme() },
                 dynamicColor = senseiTheme.dynamic,
