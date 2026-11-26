@@ -57,7 +57,13 @@ fun getVersionCode(): Int {
 }
 
 fun getVersionName(): String {
-    return getGitDescribe()
+    // 版本名单独维护：version-name.txt（如 V1.0.1），与 versionCode 解耦
+    System.getenv("SSU_VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { return it }
+    val nf = rootProject.file("../version-name.txt")
+    if (nf.exists()) nf.readText().trim().takeIf { it.isNotBlank() }?.let { return it }
+    val vf = rootProject.file("../version.txt")
+    if (vf.exists()) vf.readText().trim().takeIf { it.isNotBlank() }?.let { return it }
+    return "V1.0.0"
 }
 
 subprojects {

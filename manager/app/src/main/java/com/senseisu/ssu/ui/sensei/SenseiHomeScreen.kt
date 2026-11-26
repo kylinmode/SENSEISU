@@ -141,16 +141,10 @@ fun SenseiHomeScreen(navigator: DestinationsNavigator, bottomInnerPadding: Dp = 
             val root = runCatching { rootAvailable() }.getOrDefault(false)
             val su = runCatching { getSuperuserCount() }.getOrDefault(0)
             val mods = runCatching { getModuleCount() }.getOrDefault(0)
-            val susfsMode = runCatching { com.senseisu.ssu.ui.util.detectSusfsMode() }.getOrDefault("")
-            val susfs = when (susfsMode) {
-                "lkm" -> "LKM 模块（susfs_guard_lkm）"
-                "gki" -> runCatching { getSuSFSVersion() }
-                    .getOrDefault("")
-                    .lineSequence().map { it.trim() }
-                    .firstOrNull { it.isNotEmpty() && !it.contains("not found", true) }
-                    ?: "GKI 内置"
-                else -> ""
-            }
+            // SUSFS 状态：区分「LKM 模块」与「内核内置」
+            val susfs = runCatching { com.senseisu.ssu.ui.util.susfsStatusText() }
+                .getOrDefault("未检测")
+                .takeIf { it != "未检测" } ?: ""
             // 内核内置构建信息（改刷入脚本伪造不了），取不到再退回 cmdline
             val kernelBuild = runCatching {
                 com.senseisu.ssu.ui.util.getExtensionValue("build")

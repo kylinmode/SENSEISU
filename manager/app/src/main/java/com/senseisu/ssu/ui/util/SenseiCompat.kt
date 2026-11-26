@@ -27,13 +27,43 @@ fun getCurrentKmiBlocking(): String {
     return "$android-$ver"
 }
 
-/** SUSFS 运行模式：未检测 / 内置 / LKM */
-fun detectSusfsMode(): String {
-    val out = runCatching {
-        Shell.cmd("cat /proc/susfs_version 2>/dev/null || true").exec().out.joinToString(" ").trim()
-    }.getOrNull().orEmpty()
-    if (out.isEmpty()) return "未检测"
-    return if (out.contains("builtin", true) || out.contains("kernel", true)) "内置" else "LKM"
+/**
+ * SUSFS 状态检测（三种形态）
+ *
+ * 1. LKM 模块：本基座由 ksud 加载 susfs_guard_lkm，特征为 /sys/module/susfs_guard_lkm
+ * 2. 内核内置：/proc/susfs_version 存在且不含模块标记
+ * 3. 未检测
+ */
+suspend fun detectSusfsMode(): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    // 1) 先看 LKM 模块
+    val lkm = runCatching {
+        com.topjohnwu.superuser.Shell.cmd("test -d /sys/module/susfs_guard_lkm && echo yes").exec()
+            .out.any { it.trim() == "yes" }
+    }.getOrDefault(false)
+    if (lkm) return@withContext "lkm"
+
+    // 2) 再看内核内置
+    val ver = runCatching {
+        com.topjohnwu.superuser.Shell.cmd("cat /proc/susfs_version 2>/dev/null").exec()
+            .out.joinToString(" ").trim()
+    }.getOrDefault("")
+    if (ver.isNotEmpty()) return@withContext "gki"
+
+    ""
+}
+
+/** SUSFS 版本行，供 UI 直接显示 */
+suspend fun susfsStatusText(): String {
+    return when (detectSusfsMode()) {
+        "lkm" -> "LKM 模块"
+        "gki" -> {
+            val v = runCatching { getSuSFSVersion() }.getOrDefault("")
+            val line = v.lineSequence().map { it.trim() }
+                .firstOrNull { it.isNotEmpty() && !it.contains("not found", true) }
+            line?.let { "内置（$it）" } ?: "内置"
+        }
+        else -> "未检测"
+    }
 }
 
 /** 读取内核扩展值（旧树的 build_stamp 扩展）；新基座没有该扩展，返回 null */

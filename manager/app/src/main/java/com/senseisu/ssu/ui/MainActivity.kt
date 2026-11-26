@@ -262,7 +262,7 @@ class MainActivity : FragmentActivity() {
 
         setContent { Box(modifier = Modifier.fillMaxSize()) {
             KernelSUTheme(amoledMode = amoledModeState.value) {
-                var showSplash by remember { mutableStateOf(true) }
+                var showSplash by remember { mutableStateOf(false) }  // 启动动画已关闭
                 var splashRotationTarget by remember { mutableStateOf(0f) }
                 val splashRotation by animateFloatAsState(
                     targetValue = splashRotationTarget,
@@ -276,11 +276,7 @@ class MainActivity : FragmentActivity() {
                     label = "splashRotation"
                 )
 
-                LaunchedEffect(appLockState.value) {
-                    if (!appLockState.value && showSplash) {
-                        splashRotationTarget += 360f * 6
-                    }
-                }
+                // 启动动画已关闭，不再驱动旋转
 
                 AnimatedContent(
                     targetState = showSplash,
