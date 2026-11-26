@@ -150,8 +150,20 @@ fun SuperUserScreen(navigator: DestinationsNavigator) {
         ) {
             val scrollState = LocalScrollState.current
             val navBarEnabled = LocalNavBarEnabled.current
-            val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+            val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
             val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
+
+            val visibleApps = viewModel.appList.filter {
+                viewModel.search.isEmpty() || it.label.contains(viewModel.search, true) ||
+                    it.packageName.contains(viewModel.search, true)
+            }
+            if (visibleApps.isEmpty()) {
+                com.senseisu.ssu.ui.sensei.BaEmptyState(
+                    res = com.senseisu.ssu.R.drawable.ba_arona,
+                    title = "这里还没有学生登记",
+                    subtitle = "有应用申请 root 权限时，会出现在这份名册里。",
+                )
+            }
 
             LazyColumn(
                 state = listState,

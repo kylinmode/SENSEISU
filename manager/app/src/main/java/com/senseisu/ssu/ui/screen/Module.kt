@@ -165,7 +165,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
 
     val scrollState = LocalScrollState.current
     val navBarEnabled = LocalNavBarEnabled.current
-    val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+    val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
     val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
 
     Scaffold(
@@ -693,7 +693,7 @@ private fun ModuleList(
     ) {
         val scrollState = LocalScrollState.current
         val navBarEnabled = LocalNavBarEnabled.current
-        val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+        val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
         val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
 
         LazyColumn(
@@ -715,9 +715,10 @@ private fun ModuleList(
                             modifier = Modifier.fillParentMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                stringResource(R.string.module_empty),
-                                textAlign = TextAlign.Center
+                            com.senseisu.ssu.ui.sensei.BaEmptyState(
+                                res = com.senseisu.ssu.R.drawable.ba_shiroko,
+                                title = "还没有装载模块",
+                                subtitle = "点右下角从本地安装 zip，或者去仓库里挑一个。",
                             )
                         }
                     }

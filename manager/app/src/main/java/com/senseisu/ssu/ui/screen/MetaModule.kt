@@ -110,7 +110,7 @@ fun MetaModuleScreen(navigator: DestinationsNavigator) {
     val ksuVersion = if (isManager) Natives.version else null
     val scrollState = LocalScrollState.current
     val navBarEnabled = LocalNavBarEnabled.current
-    val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+    val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
     val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
     val modulesJsonUrl = "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next-Modules-Repo/refs/heads/main/meta_modules.json"
 

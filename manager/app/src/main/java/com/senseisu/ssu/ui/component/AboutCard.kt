@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalUriHandler
@@ -51,6 +52,12 @@ fun AboutCard() {
                 color = androidx.compose.ui.graphics.Color(0xFF9DB2C6),
             )
             Spacer(Modifier.height(10.dp))
+            com.senseisu.ssu.ui.sensei.BaBanner(
+                res = com.senseisu.ssu.R.drawable.ba_group,
+                height = 92.dp,
+                corner = 16.dp,
+            )
+            Spacer(Modifier.height(14.dp))
             AboutCardContent()
         }
     }

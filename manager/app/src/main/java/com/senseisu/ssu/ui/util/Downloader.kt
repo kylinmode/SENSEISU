@@ -65,7 +65,7 @@ fun download(
 
 fun checkNewVersion(preferSpoofed: Boolean? = null): LatestVersionInfo {
     // Next version updates
-    val url = "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest"
+    val url = "https://api.github.com/repos/kylinmode/SENSEISU/releases/latest"
     // default null value if failed
     val defaultValue = LatestVersionInfo()
     runCatching {
@@ -90,10 +90,13 @@ fun checkNewVersion(preferSpoofed: Boolean? = null): LatestVersionInfo {
                     val isApk = name.endsWith(".apk")
                     if (!isApk) continue
 
-                    val regex = Regex("v(.+?)_(\\d+)-")
+                    // 支持 SenseiSU_V1.0.1_10001-release.apk 与 SenseiSU-V1.0.1.apk 两种命名
+                    val regex = Regex("[vV](\\d+\\.\\d+\\.\\d+)(?:_(\\d+))?")
                     val matchResult = regex.find(name) ?: continue
                     val versionName = matchResult.groupValues[1]
-                    val versionCode = matchResult.groupValues[2]
+                    val versionCode = matchResult.groupValues[2].ifBlank {
+                        versionName.replace(".", "").padEnd(5, '0')
+                    }
                     val downloadUrl = asset.getString("browser_download_url")
                     
                     val isSpoofed = name.contains("spoofed", ignoreCase = true)

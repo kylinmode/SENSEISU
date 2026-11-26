@@ -121,7 +121,7 @@ fun LegacyHomeScreen(navigator: DestinationsNavigator) {
 
     val scrollState = LocalScrollState.current
     val navBarEnabled = LocalNavBarEnabled.current
-    val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+    val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
     val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
     
     // Create scroll connection for bottom bar

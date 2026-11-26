@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.activity.viewModels
 import androidx.navigation.NavBackStackEntry
 import androidx.compose.ui.draw.alpha
@@ -262,21 +263,24 @@ class MainActivity : FragmentActivity() {
 
         setContent { Box(modifier = Modifier.fillMaxSize()) {
             KernelSUTheme(amoledMode = amoledModeState.value) {
-                var showSplash by remember { mutableStateOf(false) }  // 启动动画已关闭
-                var splashRotationTarget by remember { mutableStateOf(0f) }
-                val splashRotation by animateFloatAsState(
-                    targetValue = splashRotationTarget,
-                    animationSpec = tween(
-                        durationMillis = 1400,
-                        easing = FastOutSlowInEasing
-                    ),
-                    finishedListener = {
-                        showSplash = false
-                    },
-                    label = "splashRotation"
+                // 冷启动动画：logo 淡入放大 + 底部一行签语，约 1.3 秒后淡出
+                var showSplash by remember { mutableStateOf(true) }
+                var splashVisible by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    splashVisible = true
+                    kotlinx.coroutines.delay(1150)
+                    showSplash = false
+                }
+                val splashScale by animateFloatAsState(
+                    targetValue = if (splashVisible) 1f else 0.86f,
+                    animationSpec = tween(durationMillis = 620, easing = FastOutSlowInEasing),
+                    label = "splashScale"
                 )
-
-                // 启动动画已关闭，不再驱动旋转
+                val splashAlpha by animateFloatAsState(
+                    targetValue = if (splashVisible) 1f else 0f,
+                    animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing),
+                    label = "splashAlpha"
+                )
 
                 AnimatedContent(
                     targetState = showSplash,
@@ -287,20 +291,37 @@ class MainActivity : FragmentActivity() {
                 ) { isSplashVisible ->
                     if (isSplashVisible) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        listOf(
+                                            androidx.compose.ui.graphics.Color(0xFFF6FBFF),
+                                            androidx.compose.ui.graphics.Color(0xFFE6F2FE),
+                                        )
+                                    )
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_ksu_next),
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                androidx.compose.foundation.Image(
+                                    painter = painterResource(R.drawable.ssu_foreground),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier
-                                        .size(120.dp)
-                                        .graphicsLayer { rotationZ = splashRotation }
+                                        .size(132.dp)
+                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
+                                        .graphicsLayer {
+                                            scaleX = splashScale
+                                            scaleY = splashScale
+                                            alpha = splashAlpha
+                                        },
+                                )
+                                androidx.compose.foundation.layout.Spacer(Modifier.height(18.dp))
+                                Text(
+                                    "SenSei SU · 爱意见汐",
+                                    fontSize = 13.sp,
+                                    letterSpacing = 1.5.sp,
+                                    color = androidx.compose.ui.graphics.Color(0xFF6B8199).copy(alpha = splashAlpha),
                                 )
                             }
                         }

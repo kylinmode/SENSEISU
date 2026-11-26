@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Autorenew
@@ -41,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -456,18 +458,48 @@ private fun WorkingStatusBar(state: KernelState, onClick: () -> Unit = {}) {
 
 @Composable
 private fun UpdateBanner(state: KernelState) {
-    val text = if (state.loading) "正在检查更新…" else "SSU ${BuildConfig.VERSION_NAME} · 当前已是最新构建"
+    // 真实检查 GitHub 上的最新 Release（仓库：kylinmode/SENSEISU）
+    val latest by produceState(initialValue = com.senseisu.ssu.ui.util.module.LatestVersionInfo(), key1 = Unit) {
+        value = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { com.senseisu.ssu.ui.util.checkNewVersion() }
+                .getOrDefault(com.senseisu.ssu.ui.util.module.LatestVersionInfo())
+        }
+    }
+    val hasUpdate = latest.versionCode > com.senseisu.ssu.BuildConfig.VERSION_CODE
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
+    val text = when {
+        state.loading -> "正在检查更新…"
+        hasUpdate -> "发现新版本 ${latest.versionTag.ifBlank { "V?" }} · 点此下载"
+        else -> "SSU ${com.senseisu.ssu.BuildConfig.VERSION_NAME} · 当前已是最新构建"
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.62f))
+            .background(if (hasUpdate) Sensei.PinkWash else Color.White.copy(alpha = 0.62f))
+            .then(
+                if (hasUpdate) Modifier.clickable {
+                    latest.downloadUrl.takeIf { it.isNotBlank() }?.let {
+                        runCatching { uriHandler.openUri(it) }
+                    }
+                } else Modifier
+            )
             .padding(horizontal = 16.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Filled.Info, contentDescription = null, tint = Sensei.InkSoft, modifier = Modifier.size(17.dp))
+        Icon(
+            if (hasUpdate) Icons.Filled.SystemUpdate else Icons.Filled.Info,
+            contentDescription = null,
+            tint = if (hasUpdate) Sensei.PinkDeep else Sensei.InkSoft,
+            modifier = Modifier.size(17.dp),
+        )
         Spacer(Modifier.width(10.dp))
-        Text(text, color = Sensei.InkSoft, fontSize = 12.sp)
+        Text(
+            text,
+            color = if (hasUpdate) Sensei.PinkDeep else Sensei.InkSoft,
+            fontSize = 12.sp,
+        )
     }
 }
 

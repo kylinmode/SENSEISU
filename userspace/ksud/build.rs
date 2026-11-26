@@ -33,6 +33,15 @@ fn get_git_version() -> Result<(u32, String), std::io::Error> {
     Ok((version_code, version_name))
 }
 
+/// SenseiSU：版本号统一取仓库根的 kernel-version.txt，
+/// 保证用户空间（ksud）与内核驱动报同一个数字。
+fn get_repo_version() -> Option<u32> {
+    let manifest = env::var("CARGO_MANIFEST_DIR").ok()?;
+    let path = Path::new(&manifest).join("../../kernel-version.txt");
+    let text = fs::read_to_string(path).ok()?;
+    text.trim().parse::<u32>().ok()
+}
+
 fn configure_bindgen() {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -230,13 +239,15 @@ fn assemble_bootstrap() {
 fn main() {
     assemble_bootstrap();
 
-    let (code, name) = match get_git_version() {
-        Ok((code, name)) => (code, name),
-        Err(_) => {
-            // show warning if git is not installed
-            println!("cargo:warning=Failed to get git version, using 0.0.0");
-            (0, "0.0.0".to_string())
-        }
+    let (code, name) = match get_repo_version() {
+        Some(v) => (v, format!("v{v}")),
+        None => match get_git_version() {
+            Ok((code, name)) => (code, name),
+            Err(_) => {
+                println!("cargo:warning=Failed to get version, using 0.0.0");
+                (0, "0.0.0".to_string())
+            }
+        },
     };
     let out_dir = env::var("OUT_DIR").expect("Failed to get $OUT_DIR");
     let out_dir = Path::new(&out_dir);

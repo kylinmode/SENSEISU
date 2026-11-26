@@ -22,6 +22,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.outlined.Backup
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.ContactPage
+import androidx.compose.material.icons.outlined.DeveloperBoard
+import androidx.compose.material.icons.outlined.Fence
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.Policy
+import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Update
+import androidx.compose.material.icons.outlined.Usb
+import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.RemoveModerator
+import androidx.compose.material.icons.outlined.FolderDelete
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -91,7 +107,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
 
     val scrollState = LocalScrollState.current
     val navBarEnabled = LocalNavBarEnabled.current
-    val isNavBarHidden = (scrollState?.isScrollingDown?.value ?: false) || (navBarEnabled?.value == false)
+    val isNavBarHidden = (navBarEnabled?.value == false)   // 底栏常驻，不再因滚动取消预留
     val navBarPadding =
         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + if (isNavBarHidden) 0.dp else 112.dp
 
@@ -189,19 +205,33 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 蔚蓝档案风格页眉
-            Column(Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp)) {
-                Text(
-                    "SENSEI / CONFIG",
-                    fontSize = 9.sp,
-                    letterSpacing = 2.sp,
-                    color = androidx.compose.ui.graphics.Color(0xFF9DB2C6),
-                )
-                Text(
-                    "设置",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = androidx.compose.ui.graphics.Color(0xFF1B2A38),
+            // 蔚蓝档案风格页眉（右侧小图装饰）
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "SENSEI / CONFIG",
+                        fontSize = 9.sp,
+                        letterSpacing = 2.sp,
+                        color = androidx.compose.ui.graphics.Color(0xFF9DB2C6),
+                    )
+                    Text(
+                        "设置",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color(0xFF1B2A38),
+                    )
+                }
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(com.senseisu.ssu.R.drawable.ba_night),
+                    contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier
+                        .width(84.dp)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(14.dp)),
                 )
             }
 
@@ -276,7 +306,7 @@ private fun KernelFeaturesCard(
             }
 
             SwitchItem(
-                icon = Icons.Filled.FolderDelete,
+                icon = Icons.Outlined.FolderDelete,
                 title = stringResource(R.string.settings_umount_modules_default),
                 summary = stringResource(R.string.settings_umount_modules_default_summary),
                 checked = umountChecked,
@@ -298,7 +328,7 @@ private fun KernelFeaturesCard(
                 else -> stringResource(R.string.settings_enable_su_summary)
             }
             SwitchItem(
-                icon = Icons.Filled.RemoveModerator,
+                icon = Icons.Outlined.RemoveModerator,
                 title = stringResource(R.string.settings_enable_su),
                 summary = suCompatSummary,
                 checked = isSuEnabled,
@@ -371,7 +401,7 @@ private fun KernelFeaturesCard(
                 else -> stringResource(id = R.string.settings_adb_root_summary)
             }
             SwitchItem(
-                icon = Icons.Filled.Usb,
+                icon = Icons.Outlined.Usb,
                 title = stringResource(id = R.string.settings_adb_root),
                 summary = adbRootSummary,
                 checked = isAdbRootEnabled,
@@ -395,7 +425,7 @@ private fun KernelFeaturesCard(
                 else -> stringResource(id = R.string.settings_shell_su_adb_only_summary)
             }
             SwitchItem(
-                icon = Icons.Filled.VerifiedUser,
+                icon = Icons.Outlined.VerifiedUser,
                 title = stringResource(id = R.string.settings_shell_su_adb_only),
                 summary = shellSuAdbOnlySummary,
                 checked = isShellSuAdbOnlyEnabled,
@@ -419,7 +449,7 @@ private fun KernelFeaturesCard(
                 else -> stringResource(id = R.string.settings_selinux_hide_summary)
             }
             SwitchItem(
-                icon = Icons.Filled.Policy,
+                icon = Icons.Outlined.Policy,
                 title = stringResource(id = R.string.settings_selinux_hide),
                 summary = selinuxHideSummary,
                 checked = isSelinuxHideEnabled,
@@ -466,7 +496,7 @@ private fun KernelFeaturesCard(
                 else -> stringResource(id = R.string.settings_enable_avc_spoof_summary)
             }
             SwitchItem(
-                icon = Icons.Filled.Shield,
+                icon = Icons.Outlined.Shield,
                 title = stringResource(id = R.string.settings_enable_avc_spoof),
                 summary = avcSpoofSummary,
                 checked = isAvcSpoofEnabled,
@@ -622,7 +652,7 @@ private fun SecurityCard(
             }
 
             SwitchItem(
-                icon = Icons.Filled.Security,
+                icon = Icons.Outlined.Security,
                 title = stringResource(R.string.set_selinux),
                 summary = stringResource(R.string.set_selinux_summary),
                 checked = isSelinuxPermissive,
@@ -642,7 +672,7 @@ private fun SecurityCard(
                         .clip(RoundedCornerShape(8.dp))
                         .clickable(enabled = !susfsLoadInProgress) { showSusfsLoadSheet = true },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    leadingContent = { Icon(Icons.Filled.Memory, null) },
+                    leadingContent = { Icon(Icons.Outlined.Memory, null) },
                     headlineContent = {
                         Text(
                             text = stringResource(R.string.susfs_load_action),
@@ -663,7 +693,7 @@ private fun SecurityCard(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { navigator.navigate(AppProfileTemplateScreenDestination) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.Fence, null) },
+                leadingContent = { Icon(Icons.Outlined.Fence, null) },
                 headlineContent = {
                     Text(
                         text = stringResource(R.string.settings_profile_template),
@@ -682,7 +712,7 @@ private fun SecurityCard(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { navigator.navigate(BackupRestoreScreenDestination) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.Backup, null) },
+                leadingContent = { Icon(Icons.Outlined.Backup, null) },
                 headlineContent = {
                     Text(
                         text = stringResource(R.string.backup_restore),
@@ -698,7 +728,7 @@ private fun SecurityCard(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { navigator.navigate(DeveloperScreenDestination) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.DeveloperBoard, null) },
+                leadingContent = { Icon(Icons.Outlined.DeveloperBoard, null) },
                 headlineContent = {
                     Text(
                         text = stringResource(R.string.developer),
@@ -841,7 +871,7 @@ private fun AppSettingsCard(
             }
 
             SwitchItem(
-                icon = Icons.Filled.Update,
+                icon = Icons.Outlined.Update,
                 title = stringResource(R.string.settings_check_update),
                 summary = stringResource(R.string.settings_check_update_summary),
                 checked = checkUpdate,
@@ -890,7 +920,7 @@ private fun AppSettingsCard(
                         onValueChange = onRequireBiometricChange
                     ),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    leadingContent = { Icon(Icons.Filled.Lock, null) },
+                    leadingContent = { Icon(Icons.Outlined.Lock, null) },
                     headlineContent = {
                         Text(
                             text = stringResource(R.string.settings_app_lock),
@@ -958,7 +988,7 @@ private fun AppSettingsCard(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { showBottomsheet = true },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.BugReport, null) },
+                leadingContent = { Icon(Icons.Outlined.BugReport, null) },
                 headlineContent = {
                         Text(
                             text = stringResource(
@@ -1016,7 +1046,7 @@ private fun AppSettingsCard(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { aboutDialog.show() },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.ContactPage, null) },
+                leadingContent = { Icon(Icons.Outlined.ContactPage, null) },
                 headlineContent = {
                     Text(
                         text = stringResource(R.string.about),
@@ -1053,7 +1083,7 @@ private fun ExportLogBottomSheet(
                             onClick = onSave,
                             modifier = Modifier.size(56.dp).clip(CircleShape)
                         ) {
-                            Icon(Icons.Filled.Save, contentDescription = null)
+                            Icon(Icons.Outlined.Save, contentDescription = null)
                         }
                         Text(
                             text = stringResource(id = R.string.save_log),
