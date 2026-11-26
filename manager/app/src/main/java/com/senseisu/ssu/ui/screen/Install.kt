@@ -48,6 +48,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.senseisu.ssu.ui.sensei.SenseiInstallScaffold
 import com.ramcosta.composedestinations.navigation.EmptyDestinationsNavigator
 import com.senseisu.ssu.*
 import com.senseisu.ssu.R
@@ -66,13 +67,15 @@ import java.util.Locale
 @Destination<RootGraph>
 @Composable
 fun InstallScreen(navigator: DestinationsNavigator) {
-    // 复刻旧 SSU 的安装页（Sensei 风格）
-    com.senseisu.ssu.ui.sensei.SenseiFlashScreen(onBack = { runCatching { navigator.navigateUp() } })
+    // 用上游验证过的刷入逻辑，外面套 Sensei 外观
+    SenseiInstallScaffold(navigator = navigator) {
+        InstallContent(navigator)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LegacyInstallScreen(navigator: DestinationsNavigator) {
+private fun InstallContent(navigator: DestinationsNavigator) {
 
     var installMethod by remember {
         mutableStateOf<InstallMethod?>(null)
