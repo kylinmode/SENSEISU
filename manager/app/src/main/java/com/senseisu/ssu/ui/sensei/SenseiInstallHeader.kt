@@ -65,45 +65,56 @@ fun SenseiInstallHeader(
     }
 }
 
-/** 仿底部栏的触摸效果：纯色填充变化，无涟漪、无阴影 */
+/** 滑动指示器式胶囊：选中块平滑滑动，点按无涟漪 */
 @Composable
 private fun PillTabs(selected: Int, onSelect: (Int) -> Unit) {
-    Row(
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val labels = listOf("修补文件", "本机刷入")
+    // 每个 tab 的固定宽度（按最长文本估算，保证指示器可滑动且不抖动）
+    val tabWidth = 84.dp
+    val pad = 3.dp
+    val offset by androidx.compose.animation.core.animateDpAsState(
+        targetValue = pad + tabWidth * selected,
+        animationSpec = androidx.compose.animation.core.tween(220),
+        label = "pillOffset",
+    )
+
+    Box(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(Color(0xFFE3EEFB))
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(pad)
     ) {
-        listOf("修补文件", "本机刷入").forEachIndexed { index, label ->
-            val active = selected == index
-            val bg by animateColorAsState(
-                targetValue = if (active) Color.White else Color.Transparent,
-                label = "pillBg",
-            )
-            val fg by animateColorAsState(
-                targetValue = if (active) Color(0xFF1B2B44) else Color(0xFF5B6B80),
-                label = "pillFg",
-            )
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(bg)
-                    // indication = null → 点按没有灰色方块/涟漪
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) { onSelect(index) }
-                    .padding(horizontal = 22.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    label,
-                    fontSize = 14.sp,
-                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                    color = fg,
-                )
+        // 滑动底块
+        Box(
+            modifier = Modifier
+                .offset(x = offset - pad)
+                .width(tabWidth)
+                .height(34.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.White)
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+            labels.forEachIndexed { index, label ->
+                Row(
+                    modifier = Modifier
+                        .width(tabWidth)
+                        .height(34.dp)
+                        .clip(RoundedCornerShape(50))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { onSelect(index) },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        label,
+                        fontSize = 14.sp,
+                        fontWeight = if (selected == index) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (selected == index) Color(0xFF1B2B44) else Color(0xFF5B6B80),
+                    )
+                }
             }
         }
     }

@@ -37,6 +37,8 @@ fun Color.blend(other: Color, ratio: Float): Color {
 @Composable
 fun KernelSUTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    // SenseiSU 主题色（为空则跟随系统动态取色）
+    seedColor: androidx.compose.ui.graphics.Color? = null,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     amoledMode: Boolean = false,
@@ -77,12 +79,21 @@ fun KernelSUTheme(
         else -> LightColorScheme
     }
 
+    // 指定主题色时覆盖主色（优先级低于 AMOLED 的背景处理）
+    val finalScheme = if (seedColor != null) {
+        colorScheme.copy(
+            primary = seedColor,
+            primaryContainer = seedColor.copy(alpha = 0.22f),
+            onPrimaryContainer = seedColor,
+        )
+    } else colorScheme
+
     SystemBarStyle(
         darkMode = darkTheme
     )
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = finalScheme,
         typography = Typography,
         content = content
     )

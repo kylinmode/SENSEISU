@@ -944,6 +944,38 @@ private fun AppSettingsCard(
                 }
             )
 
+            var showThemeSettings by remember { mutableStateOf(false) }
+            ListItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { showThemeSettings = true },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                leadingContent = { Icon(Icons.Filled.Brush, null) },
+                headlineContent = {
+                    Text(
+                        text = "主题设置",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                supportingContent = { Text("主题色 · 深浅模式 · 背景图") }
+            )
+
+            if (showThemeSettings) {
+                androidx.compose.ui.window.Dialog(onDismissRequest = { showThemeSettings = false }) {
+                    androidx.compose.foundation.layout.Box(
+                        androidx.compose.ui.Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 560.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        com.senseisu.ssu.ui.sensei.SenseiThemeSettingsContent()
+                    }
+                }
+            }
+
             var showBottomsheet by remember { mutableStateOf(false) }
 
             ListItem(
