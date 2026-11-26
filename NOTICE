@@ -1,0 +1,38 @@
+SenseiSU
+Copyright (C) 2026 SenseiSU contributors
+
+This project is licensed under the GNU General Public License v2.0.
+See the LICENSE file for the full license text.
+
+This project contains code derived from the following open-source
+projects. Their copyright notices are retained in the respective
+source files.
+
+  KernelSU
+  Copyright (C) KernelSU contributors
+  https://github.com/tiann/KernelSU
+  License: GPL-2.0
+
+  KernelSU-Next
+  Copyright (C) KernelSU-Next contributors
+  https://github.com/KernelSU-Next/KernelSU-Next
+  License: GPL-2.0
+
+  SukiSU
+  Copyright (C) SukiSU contributors
+  https://github.com/SukiSU-Ultra/SukiSU-Ultra
+  License: GPL-2.0
+
+Modifications, rebranding and additional features by the SenseiSU
+project.
+
+SenseiSU is an independent fork. It is not affiliated with, endorsed
+by, sponsored by, or maintained by any of the projects listed above.
+
+Third-party components bundled in binary form:
+  busybox        GPL-2.0
+  magiskboot     GPL-3.0
+  magiskpolicy   GPL-3.0
+  lz4            BSD-2-Clause
+  zstd           BSD-3-Clause
+  Rust crates    see Cargo.lock for individual licenses

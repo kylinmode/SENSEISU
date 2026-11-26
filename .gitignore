@@ -1,0 +1,17 @@
+# 签名与密钥
+*.jks
+*.keystore
+ssu.env
+
+# 构建产物
+out/
+build/
+target/
+*.apk
+*.zip
+*.ko
+*.img
+
+# IDE
+.idea/
+*.iml
