@@ -8,12 +8,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,51 +64,58 @@ fun SenseiBottomBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(bottom = 18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            tonalElevation = 2.dp,
-            shadowElevation = 6.dp,
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f))
+                .clipToBounds()
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 3.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 items.forEachIndexed { index, item ->
                     val active = index == selected
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .width(70.dp)
+                            .height(47.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .drawBehind {
+                                if (active) {
+                                    drawRoundRect(
+                                        color = highlightColor,
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20.dp.toPx()),
+                                    )
+                                }
+                            }
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            ) { go(index) }
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) { go(index) },
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(CircleShape)
-                                .background(if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = if (active) item.iconSelected else item.iconNotSelected,
-                                contentDescription = null,
-                                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(22.dp),
-                            )
-                        }
+                        Icon(
+                            imageVector = if (active) item.iconSelected else item.iconNotSelected,
+                            contentDescription = null,
+                            tint = if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.height(1.dp))
                         Text(
                             text = stringResource(item.label),
                             fontSize = 10.sp,
                             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

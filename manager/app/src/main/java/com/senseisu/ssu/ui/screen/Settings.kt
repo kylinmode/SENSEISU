@@ -639,22 +639,6 @@ private fun SecurityCard(
                 )
             }
 
-            ListItem(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { navigator.navigate(ThemeSettingsScreenDestination) },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = { Icon(Icons.Filled.Brush, null) },
-                headlineContent = {
-                    Text(
-                        text = "主题设置",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                supportingContent = { Text("主题模式 · 动态颜色 · 背景") }
-            )
 
             ListItem(
                 modifier = Modifier
@@ -828,7 +812,7 @@ private fun AppSettingsCard(
     loadingDialog: LoadingDialogHandle,
     scope: kotlinx.coroutines.CoroutineScope,
     context: Context,
-    isUnrooted: Boolean
+    isUnrooted: Boolean,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -1007,6 +991,7 @@ private fun AppSettingsCard(
                     }
                 )
             }
+
 
             ListItem(
                 modifier = Modifier

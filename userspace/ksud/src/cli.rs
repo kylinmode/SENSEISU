@@ -13,7 +13,7 @@ use crate::{
     susfsd, utils, risk,
 };
 
-/// KernelSU Next userspace cli
+/// SenseiSU userspace cli
 #[derive(Parser, Debug)]
 #[command(author, version = defs::FULL_VERSION, about, long_about = None)]
 struct Args {
@@ -23,7 +23,7 @@ struct Args {
 
 #[derive(clap::Subcommand, Debug)]
 enum Commands {
-    /// Manage KernelSU Next modules
+    /// Manage SenseiSU modules
     Module {
         #[command(subcommand)]
         command: Module,
@@ -66,16 +66,16 @@ enum Commands {
         params: Vec<String>,
     },
 
-    /// Install KernelSU Next userspace component to system
+    /// Install SenseiSU userspace component to system
     Install {
         #[arg(long, default_value = None)]
         libadbroot: Option<PathBuf>,
     },
 
-    /// Unload KernelSU Next kernel module (LKM Only)
+    /// Unload SenseiSU kernel module (LKM Only)
     Unload,
 
-    /// Uninstall KernelSU Next modules and itself(LKM Only)
+    /// Uninstall SenseiSU modules and itself (LKM Only)
     Uninstall {
         #[arg(long, default_value_t = String::from("com.senseisu.ssu"))]
         package_name: String,
