@@ -412,7 +412,7 @@ fun installBoot(
     when (lkm) {
         is LkmSelection.LkmUri -> {
             lkmFile = with(resolver.openInputStream(lkm.uri)) {
-                val file = File(ksuApp.cacheDir, "kernelsu-tmp-lkm.ko")
+                val file = File(ksuApp.cacheDir, "ssu-tmp-lkm.ko")
                 file.outputStream().use { output ->
                     this?.copyTo(output)
                 }

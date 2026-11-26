@@ -48,7 +48,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.senseisu.ssu.ui.sensei.SenseiInstallScaffold
 import com.ramcosta.composedestinations.navigation.EmptyDestinationsNavigator
 import com.senseisu.ssu.*
 import com.senseisu.ssu.R
@@ -67,10 +66,8 @@ import java.util.Locale
 @Destination<RootGraph>
 @Composable
 fun InstallScreen(navigator: DestinationsNavigator) {
-    // 用上游验证过的刷入逻辑，外面套 Sensei 外观
-    SenseiInstallScaffold(navigator = navigator) {
-        InstallContent(navigator)
-    }
+    // 直接用上游布局（单一标题栏），外观通过容器色与底部按钮微调
+    InstallContent(navigator)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,12 +188,16 @@ private fun InstallContent(navigator: DestinationsNavigator) {
     } else null
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color(0xFFF5FAFF),
         topBar = {
             TopBar(
                 onBack = dropUnlessResumed { navigator.popBackStack() },
                 onLkmUpload = if (kernelVersion.isGKI()) onLkmUpload else null,
                 scrollBehavior = scrollBehavior
             )
+        },
+        bottomBar = {
+            com.senseisu.ssu.ui.sensei.SenseiLocalFlashBar()
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { innerPadding ->
