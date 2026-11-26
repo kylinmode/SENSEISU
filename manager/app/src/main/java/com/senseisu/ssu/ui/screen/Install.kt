@@ -66,6 +66,13 @@ import java.util.Locale
 @Destination<RootGraph>
 @Composable
 fun InstallScreen(navigator: DestinationsNavigator) {
+    // 复刻旧 SSU 的安装页（Sensei 风格）
+    com.senseisu.ssu.ui.sensei.SenseiFlashScreen(onBack = { runCatching { navigator.navigateUp() } })
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LegacyInstallScreen(navigator: DestinationsNavigator) {
 
     var installMethod by remember {
         mutableStateOf<InstallMethod?>(null)
