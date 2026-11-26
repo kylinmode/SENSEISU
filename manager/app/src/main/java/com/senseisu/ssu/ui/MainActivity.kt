@@ -209,7 +209,6 @@ class MainActivity : FragmentActivity() {
     // Sensei 主题：模式 / 主题色 / 背景图
     var senseiDarkOverride by mutableStateOf<Boolean?>(null)
     var senseiSeedColor by mutableStateOf<androidx.compose.ui.graphics.Color?>(null)
-    var senseiBgUri by mutableStateOf<String?>(null)
     var navBarEnabled = mutableStateOf(true)
     private val handler = Handler(Looper.getMainLooper())
 
@@ -640,7 +639,6 @@ class MainActivity : FragmentActivity() {
         }
         val seed = p.getInt(com.senseisu.ssu.ui.sensei.KEY_SEED, -1)
         senseiSeedColor = if (seed == -1) null else androidx.compose.ui.graphics.Color(seed)
-        senseiBgUri = p.getString(com.senseisu.ssu.ui.sensei.KEY_BG, null)
     }
 
     fun setAmoledMode(enabled: Boolean) {

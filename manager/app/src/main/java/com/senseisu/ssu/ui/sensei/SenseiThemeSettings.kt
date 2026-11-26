@@ -1,9 +1,6 @@
 package com.senseisu.ssu.ui.sensei
 
 import android.content.Context
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +24,6 @@ import androidx.compose.ui.unit.sp
 const val THEME_PREFS = "sensei_theme"
 const val KEY_MODE = "theme_mode"       // 0 跟随系统 1 浅色 2 深色
 const val KEY_SEED = "theme_seed"       // ARGB 或 -1
-const val KEY_BG = "theme_bg_uri"       // 背景图 uri
 
 val THEME_PRESETS = listOf(
     "蔚蓝" to 0xFF4A6FA5,
@@ -48,19 +44,6 @@ fun SenseiThemeSettingsContent() {
 
     var mode by remember { mutableStateOf(prefs.getInt(KEY_MODE, 0)) }
     var seed by remember { mutableStateOf(prefs.getInt(KEY_SEED, -1)) }
-    var bgUri by remember { mutableStateOf(prefs.getString(KEY_BG, null)) }
-
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }
-            prefs.edit().putString(KEY_BG, uri.toString()).apply()
-            bgUri = uri.toString()
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -122,29 +105,5 @@ fun SenseiThemeSettingsContent() {
             }
         }
 
-        // 背景图
-        Card(shape = RoundedCornerShape(16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("自定义背景", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                Text(
-                    if (bgUri.isNullOrBlank()) "未设置" else "已设置",
-                    fontSize = 13.sp,
-                    color = Color(0xFF5B6B80),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { picker.launch(arrayOf("image/*")) },
-                        shape = RoundedCornerShape(12.dp),
-                    ) { Text("选择图片") }
-                    OutlinedButton(
-                        onClick = {
-                            prefs.edit().remove(KEY_BG).apply()
-                            bgUri = null
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                    ) { Text("清除") }
-                }
-            }
-        }
     }
 }
