@@ -53,10 +53,13 @@ fun SenseiLocalFlashContent() {
         }.start()
     }
 
+    var pendingUri by remember { mutableStateOf<Uri?>(null) }
+
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
+            pendingUri = uri
             imgName = uri.lastPathSegment ?: "已选择镜像"
-            flash(uri)
+            log = ""
         }
     }
 
@@ -85,7 +88,22 @@ fun SenseiLocalFlashContent() {
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(if (busy) "刷入中…" else "选择镜像并刷入", fontWeight = FontWeight.SemiBold)
+                    Text("选择镜像", fontWeight = FontWeight.SemiBold)
+                }
+                Button(
+                    onClick = { pendingUri?.let { flash(it) } },
+                    enabled = !busy && pendingUri != null,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD2477E),
+                    ),
+                ) {
+                    Text(
+                        if (busy) "刷入中…" else "确定刷入",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                    )
                 }
             }
         }

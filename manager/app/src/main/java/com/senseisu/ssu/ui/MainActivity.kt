@@ -402,7 +402,8 @@ class MainActivity : FragmentActivity() {
                         val showBottomBar = when (currentDestination?.route) {
                             FlashScreenDestination.route -> false // Hide for FlashScreenDestination
                             ExecuteModuleActionScreenDestination.route -> false // Hide for ExecuteModuleActionScreen
-                            else -> !isScrollingDown.value && navBarEnabled.value
+                            // 常驻：滚动时不再隐藏
+                            else -> navBarEnabled.value
                         }
 
                         Scaffold(
