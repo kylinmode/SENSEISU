@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.SettingsBackupRestore
@@ -221,7 +222,7 @@ fun SenseiHomeScreen(navigator: DestinationsNavigator, bottomInnerPadding: Dp = 
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             TitleBar(
-                onLock = { runCatching { navigator.navigate(InstallScreenDestination) } },
+                onLock = { runCatching { navigator.navigate(com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination) } },
                 susfsSupported = state.susfs.isNotBlank(),
             )
             HeroArt(heroBitmap)
@@ -284,7 +285,7 @@ private fun TitleBar(onLock: () -> Unit, susfsSupported: Boolean) {
         SenseiOnlyBadge()
         Spacer(Modifier.weight(1f))
         if (susfsSupported) {
-            IconAction(Icons.Filled.Lock, onLock)
+            IconAction(Icons.Filled.VerifiedUser, onLock)
             Spacer(Modifier.width(6.dp))
         }
         PowerMenu()

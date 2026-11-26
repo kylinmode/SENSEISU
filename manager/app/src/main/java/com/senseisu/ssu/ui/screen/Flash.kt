@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.BidiFormatter
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.ramcosta.composedestinations.annotation.Destination
@@ -370,6 +371,14 @@ fun FlashScreen(
         ) {
             LaunchedEffect(text) {
                 scrollState.animateScrollTo(scrollState.maxValue)
+            }
+            if (text.isBlank()) {
+                Text(
+                    text = "正在准备…（初始化环境，稍等几秒）",
+                    modifier = Modifier.padding(16.dp),
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp,
+                )
             }
             Text(
                 modifier = Modifier.padding(8.dp),
