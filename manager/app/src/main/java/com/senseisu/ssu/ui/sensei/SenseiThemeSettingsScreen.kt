@@ -16,7 +16,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+
 /** 第 1 轮：外观底盘（主题模式 / 动态颜色 / 自定义背景 / 模糊） */
+@Destination<RootGraph>
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ThemeSettingsScreen(navigator: DestinationsNavigator) {
+    SenseiThemeSettingsScreen(onClose = { runCatching { navigator.navigateUp() } })
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SenseiThemeSettingsScreen(onClose: () -> Unit) {

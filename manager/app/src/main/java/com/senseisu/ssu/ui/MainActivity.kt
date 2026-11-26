@@ -266,10 +266,7 @@ class MainActivity : FragmentActivity() {
         if(intent != null)
             handleIntent(intent)
 
-        setContent { com.senseisu.ssu.ui.sensei.SenseiBackground(
-            uriString = senseiTheme.bgUri,
-            blur = senseiTheme.blur,
-        ) { Box(modifier = Modifier.fillMaxSize()) {
+        setContent { Box(modifier = Modifier.fillMaxSize()) {
             KernelSUTheme(
                 darkTheme = when (senseiTheme.mode) { 1 -> false; 2 -> true; else -> androidx.compose.foundation.isSystemInDarkTheme() },
                 dynamicColor = senseiTheme.dynamic,
@@ -576,7 +573,7 @@ class MainActivity : FragmentActivity() {
 
             AppLockOverlay(amoledModeState.value)
 
-        } } } // Box & setContent
+        } } // Box & setContent
     } // onCreate
 
     @Composable
