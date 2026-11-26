@@ -206,10 +206,6 @@ class MainActivity : FragmentActivity() {
     var navigateLoc by mutableStateOf<NavigateLocation?>(null)
     var moduleActionId by mutableStateOf<String?>(null)
     var amoledModeState = mutableStateOf(false)
-    // Sensei 主题：模式 / 主题色 / 背景图
-    var senseiDarkOverride by mutableStateOf<Boolean?>(null)
-    var senseiSeedColor by mutableStateOf<androidx.compose.ui.graphics.Color?>(null)
-    var senseiBgUri by mutableStateOf<String?>(null)
     var navBarEnabled = mutableStateOf(true)
     private val handler = Handler(Looper.getMainLooper())
 
@@ -221,7 +217,6 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        loadSenseiTheme()
 
         super.onCreate(savedInstanceState)
 
@@ -266,11 +261,7 @@ class MainActivity : FragmentActivity() {
             handleIntent(intent)
 
         setContent { Box(modifier = Modifier.fillMaxSize()) {
-            KernelSUTheme(
-                darkTheme = senseiDarkOverride ?: androidx.compose.foundation.isSystemInDarkTheme(),
-                seedColor = senseiSeedColor,
-                amoledMode = amoledModeState.value
-            ) {
+            KernelSUTheme(amoledMode = amoledModeState.value) {
                 var showSplash by remember { mutableStateOf(false) }  // 启动动画已关闭
                 var splashRotationTarget by remember { mutableStateOf(0f) }
                 val splashRotation by animateFloatAsState(
@@ -562,7 +553,7 @@ class MainActivity : FragmentActivity() {
                                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
                                 ) {
-                                    BottomBar(navController, lastValidNavbarSelection)
+                                    com.senseisu.ssu.ui.sensei.SenseiBottomBar(navController, lastValidNavbarSelection)
                                 }
                             }
                         }
@@ -628,19 +619,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-    }
-
-    /** 读取 Sensei 主题偏好（主题设置页改动后返回即生效） */
-    private fun loadSenseiTheme() {
-        val p = com.senseisu.ssu.ui.sensei.themePrefs(this)
-        senseiDarkOverride = when (p.getInt(com.senseisu.ssu.ui.sensei.KEY_MODE, 0)) {
-            1 -> false
-            2 -> true
-            else -> null
-        }
-        val seed = p.getInt(com.senseisu.ssu.ui.sensei.KEY_SEED, -1)
-        senseiSeedColor = if (seed == -1) null else androidx.compose.ui.graphics.Color(seed)
-        senseiBgUri = p.getString(com.senseisu.ssu.ui.sensei.KEY_BG, null)
     }
 
     fun setAmoledMode(enabled: Boolean) {
