@@ -10,6 +10,7 @@
 - 内核级 su 授权，按应用粒度配置权限
 - 挂载视图隐藏、SELinux 规则隐藏、AVC 日志伪装
 - 管理器包名严格校验（只接受 ASCII 可见字符，拒绝冒充）
+- **SUSFS 支持**（LKM 模式，通过 [独立模块](https://github.com/kylinmode/SUSFS-Guard-LKM) 加载）
 
 ## 安装
 
@@ -32,6 +33,59 @@ fastboot flash boot SSU-<kmi>.zip
 ```
 
 也可通过管理器的「一键刷入」完成。刷之前请备份原始镜像以便回滚。
+
+## SUSFS 支持（LKM 模式）
+
+SenseiSU 采用 **LKM** 方式运行，SUSFS 不在内核里编译，而是以**独立内核模块**的形式加载：
+
+```
+SenseiSU 驱动（kernelsu.ko）
+    └── susfs_guard_lkm.ko   ← 按 KMI 单独编译，作为普通模块刷入
+```
+
+这意味着：
+
+| 特性 | 说明 |
+|---|---|
+| 内核保持原厂 | 不需要编译或替换整个内核，OTA 后只重刷 `init_boot` |
+| SUSFS 按需启用 | 不装模块就没有 SUSFS，装了才接管挂载/路径隐藏 |
+| 按 KMI 分发 | 每个内核版本一个包，装错版本会拒绝加载 |
+
+### 获取 SUSFS 模块
+
+模块由 **独立仓库构建与分发**，源码与产物都在这里：
+
+> **[kylinmode/SUSFS-Guard-LKM](https://github.com/kylinmode/SUSFS-Guard-LKM)**
+
+下载地址（按内核选一个）：
+
+<https://github.com/kylinmode/SUSFS-Guard-LKM/releases>
+
+| 内核 | 对应包 |
+|---|---|
+| 5.10（Android 12/13） | `SUSFS-Guard-android12-5.10.zip` / `android13-5.10.zip` |
+| 5.15（Android 13/14） | `SUSFS-Guard-android13-5.15.zip` / `android14-5.15.zip` |
+| 6.1（Android 14） | `SUSFS-Guard-android14-6.1.zip` |
+| 6.6（Android 15） | `SUSFS-Guard-android15-6.6.zip` |
+| 6.12（Android 16） | `SUSFS-Guard-android16-6.12.zip` |
+| 6.18（Android 17） | `SUSFS-Guard-android17-6.18.zip` |
+
+### 安装
+
+1. 管理器 → 模块 → 从本地安装
+2. 选对应 KMI 的 zip
+3. 重启
+4. 首页显示 `SUSFS: LKM 模块` 即生效
+
+也可以在设置页的「加载 SUSFS 内核模块」里手动加载 / 打开开机自动加载。
+
+### 状态怎么看
+
+| 显示 | 含义 |
+|---|---|
+| `SUSFS: LKM 模块` | 已通过独立模块加载，正常 |
+| `SUSFS: 内核内置` | 走的是 GKI 整包路线 |
+| `未检测到` | 没有加载 SUSFS，隐藏类功能不生效 |
 
 ## 构建
 
