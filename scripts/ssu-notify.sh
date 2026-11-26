@@ -38,10 +38,15 @@ esac
 
 FAIL=0
 for chat in ${CHAT_IDS//,/ }; do
-  resp=$(curl -s --max-time 30 -X POST \
-    "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-    --data-urlencode "chat_id=${chat}" \
-    --data-urlencode "text=${TEXT}")
+  resp=""
+  for attempt in 1 2 3 4 5; do
+    resp=$(curl -s --retry 2 --retry-delay 2 --max-time 45 -X POST \
+      "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${chat}" \
+      --data-urlencode "text=${TEXT}" || true)
+    [ -n "$resp" ] && break
+    sleep 5
+  done
   ok=$(printf '%s' "$resp" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("ok"))' 2>/dev/null || echo False)
   if [ "$ok" = "True" ]; then
     echo "已发送到 ${chat}"
