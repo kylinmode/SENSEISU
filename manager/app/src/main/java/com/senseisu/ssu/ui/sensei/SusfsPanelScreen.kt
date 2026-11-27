@@ -26,7 +26,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-const val SUSFS_CONF = "/data/adb/ssu/susfs.conf"
+const val SUSFS_CONF = "/data/ssu/susfs.conf"
+const val SUSFS_CONF_LEGACY = "/data/adb/ssu/susfs.conf"
 
 /** 内核里真正启用的能力（来自 ksud susfs features） */
 private fun readFeatures(): Set<String> {
@@ -36,8 +37,13 @@ private fun readFeatures(): Set<String> {
 
 private fun ksudPath(): String = com.senseisu.ssu.ui.util.ksudPathForDiagnostics()
 
-private fun readConfText(): String =
-    runCatching { ShellUtils.fastCmd("cat $SUSFS_CONF 2>/dev/null") }.getOrDefault("")
+private fun readConfText(): String = runCatching {
+    ShellUtils.fastCmd(
+        "if [ ! -f $SUSFS_CONF ] && [ -f $SUSFS_CONF_LEGACY ]; then " +
+            "mkdir -p /data/ssu && cp $SUSFS_CONF_LEGACY $SUSFS_CONF; fi; " +
+            "cat $SUSFS_CONF 2>/dev/null"
+    )
+}.getOrDefault("")
 
 private fun getKey(text: String, key: String): String =
     text.lines().firstOrNull { it.startsWith("$key=") }?.substringAfter("=")?.trim().orEmpty()
@@ -64,7 +70,7 @@ private fun writeModel(
     }
     val b64 = android.util.Base64.encodeToString(body.toByteArray(), android.util.Base64.NO_WRAP)
     return runCatching {
-        ShellUtils.fastCmd("mkdir -p /data/adb/ssu && echo $b64 | base64 -d > $SUSFS_CONF && chmod 600 $SUSFS_CONF")
+        ShellUtils.fastCmd("mkdir -p /data/ssu && echo $b64 | base64 -d > $SUSFS_CONF && chmod 600 $SUSFS_CONF")
         true
     }.getOrDefault(false)
 }
@@ -74,7 +80,7 @@ private fun log(msg: String) {
         ("[${System.currentTimeMillis()}] $msg\n").toByteArray(), android.util.Base64.NO_WRAP
     )
     runCatching {
-        ShellUtils.fastCmd("mkdir -p /data/adb/ssu && echo $b64 | base64 -d >> /data/adb/ssu/susfs.log")
+        ShellUtils.fastCmd("mkdir -p /data/ssu && echo $b64 | base64 -d >> /data/ssu/susfs.log")
     }
 }
 
@@ -224,7 +230,7 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                                 scope.launch {
                                     val r = withContext(Dispatchers.IO) {
                                         ShellUtils.fastCmd(
-                                            "mkdir -p /data/adb/ssu && " +
+                                            "mkdir -p /data/ssu && " +
                                                 "if [ -f /sdcard/senseisu/ssu3/susfs.conf ]; then " +
                                                 "cp /sdcard/senseisu/ssu3/susfs.conf $SUSFS_CONF && echo imported; " +
                                                 "else echo missing; fi"
@@ -406,7 +412,7 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                                 "id", "uname -r",
                                 "$k susfs version", "$k susfs variant", "$k susfs features",
                                 "$k susfs config", "cat $SUSFS_CONF",
-                                "cat /data/adb/ssu/susfs.log 2>/dev/null | tail -30",
+                                "cat /data/ssu/susfs.log 2>/dev/null | tail -30",
                                 "lsmod | grep -i susfs", "ls -l /data/adb/modules/ | head -20",
                             )
                             val body = buildString {

@@ -346,13 +346,23 @@ struct SusCmdline {
     err: i32,
 }
 
-const SUSFS_CONF_PATH: &str = "/data/adb/ssu/susfs.conf";
+const SUSFS_CONF_PATH: &str = "/data/ssu/susfs.conf";
+const SUSFS_CONF_LEGACY: &str = "/data/adb/ssu/susfs.conf";
 
 fn conf_path() -> &'static str { SUSFS_CONF_PATH }
 
 /// 读取本地配置文件（key=value 逐行，支持 paths 多行用 | 连接）
 fn read_conf() -> std::collections::BTreeMap<String, String> {
     let mut map = std::collections::BTreeMap::new();
+    // 首次运行：把旧位置（/data/adb/ssu）的配置迁过来
+    if !std::path::Path::new(conf_path()).exists() {
+        if let Ok(old) = std::fs::read_to_string(SUSFS_CONF_LEGACY) {
+            if let Some(dir) = std::path::Path::new(conf_path()).parent() {
+                std::fs::create_dir_all(dir).ok();
+            }
+            std::fs::write(conf_path(), &old).ok();
+        }
+    }
     let Ok(text) = std::fs::read_to_string(conf_path()) else { return map };
     for line in text.lines() {
         let line = line.trim();
