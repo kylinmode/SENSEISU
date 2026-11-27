@@ -15,6 +15,17 @@ const SUSFS_ENABLED_FEATURES_SIZE: usize = 8192;
 const SUSFS_MAX_VERSION_BUFSIZE: usize = 16;
 const SUSFS_MAX_VARIANT_BUFSIZE: usize = 16;
 
+const CMD_SUSFS_ADD_SUS_PATH: u64 = 0x55550;
+const CMD_SUSFS_SET_UNAME: u64 = 0x55590;
+const CMD_SUSFS_ENABLE_LOG: u64 = 0x555a0;
+const CMD_SUSFS_SET_CMDLINE_OR_BOOTCONFIG: u64 = 0x555b0;
+const CMD_SUSFS_HIDE_SUS_MNTS_FOR_NON_SU_PROCS: u64 = 0x55561;
+const CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING: u64 = 0x60010;
+
+const SUSFS_MAX_LEN_PATHNAME: usize = 256;
+const SUSFS_MAX_UTS_LEN: usize = 64;
+const SUSFS_FAKE_CMDLINE_SIZE: usize = 8192;
+
 const ERR_CMD_NOT_SUPPORTED: i32 = 126;
 const AUTOLOAD_CONFIG_MODULE_ID: &str = "internal.ksud.susfsd";
 const AUTOLOAD_ENABLED_CONFIG_KEY: &str = "autoload.enabled";
@@ -297,5 +308,251 @@ fn check_unsupported(err: i32, cmd: u64) -> Result<()> {
     if err == ERR_CMD_NOT_SUPPORTED {
         return Err(anyhow!("CMD: '0x{:x}', SUSFS operation not supported, please enable it in kernel", cmd));
     }
+    Ok(())
+}
+
+
+// ── 配置项（与内核 supercall 对接）───────────────────────────
+const CFG_SUS_PATHS: &str = "paths";
+const CFG_UNAME_RELEASE: &str = "uname_release";
+const CFG_UNAME_VERSION: &str = "uname_version";
+const CFG_CMDLINE: &str = "cmdline";
+const CFG_AVC_LOG_SPOOF: &str = "avc_log_spoof";
+const CFG_LOG_ENABLED: &str = "log_enabled";
+const CFG_HIDE_SUS_MNTS: &str = "hide_sus_mnts";
+
+#[repr(C)]
+struct SusPath {
+    path: [u8; SUSFS_MAX_LEN_PATHNAME],
+    err: i32,
+}
+
+#[repr(C)]
+struct SusUname {
+    release: [u8; SUSFS_MAX_UTS_LEN + 1],
+    version: [u8; SUSFS_MAX_UTS_LEN + 1],
+    err: i32,
+}
+
+#[repr(C)]
+struct SusBool {
+    enabled: bool,
+    err: i32,
+}
+
+#[repr(C)]
+struct SusCmdline {
+    fake: [u8; SUSFS_FAKE_CMDLINE_SIZE],
+    err: i32,
+}
+
+const SUSFS_CONF_PATH: &str = "/data/adb/ssu/susfs.conf";
+
+fn conf_path() -> &'static str { SUSFS_CONF_PATH }
+
+/// 读取本地配置文件（key=value 逐行，支持 paths 多行用 | 连接）
+fn read_conf() -> std::collections::BTreeMap<String, String> {
+    let mut map = std::collections::BTreeMap::new();
+    let Ok(text) = std::fs::read_to_string(conf_path()) else { return map };
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') { continue; }
+        if let Some((k, v)) = line.split_once('=') {
+            map.insert(k.trim().to_owned(), v.trim().to_owned());
+        }
+    }
+    map
+}
+
+fn write_conf(map: &std::collections::BTreeMap<String, String>) -> Result<()> {
+    if let Some(dir) = std::path::Path::new(conf_path()).parent() {
+        std::fs::create_dir_all(dir).ok();
+    }
+    let mut out = String::from("# SenseiSU SUSFS 配置（管理器编辑，ksud susfs apply 生效）\n");
+    for (k, v) in map { out.push_str(&format!("{k}={v}\n")); }
+    std::fs::write(conf_path(), out).context("写入 susfs.conf 失败")?;
+    Ok(())
+}
+
+fn read_cfg(key: &str) -> Option<String> {
+    read_conf().get(key).cloned().filter(|v| !v.is_empty())
+}
+
+fn write_cfg(key: &str, value: &str) -> Result<()> {
+    let mut map = read_conf();
+    map.insert(key.to_owned(), value.to_owned());
+    write_conf(&map)
+}
+
+fn cfg_bool(key: &str) -> bool {
+    read_cfg(key)
+        .as_deref()
+        .is_some_and(crate::module_config::parse_bool_config)
+}
+
+fn add_sus_path_syscall(path: &str) -> Result<()> {
+    ensure!(!path.is_empty() && path.len() < SUSFS_MAX_LEN_PATHNAME, "路径过长或为空");
+    let mut cmd = SusPath { path: [0; SUSFS_MAX_LEN_PATHNAME], err: ERR_CMD_NOT_SUPPORTED };
+    let bytes = path.as_bytes();
+    cmd.path[..bytes.len()].copy_from_slice(bytes);
+    unsafe {
+        syscall(SYS_reboot, KSU_INSTALL_MAGIC1, SUSFS_MAGIC, CMD_SUSFS_ADD_SUS_PATH, &mut cmd as *mut _);
+    }
+    check_unsupported(cmd.err, CMD_SUSFS_ADD_SUS_PATH)?;
+    ensure!(cmd.err == 0, "内核拒绝该路径（错误码 {}）", cmd.err);
+    Ok(())
+}
+
+fn set_uname_syscall(release: &str, version: &str) -> Result<()> {
+    let mut cmd = SusUname {
+        release: [0; SUSFS_MAX_UTS_LEN + 1],
+        version: [0; SUSFS_MAX_UTS_LEN + 1],
+        err: ERR_CMD_NOT_SUPPORTED,
+    };
+    let r = release.as_bytes();
+    let v = version.as_bytes();
+    ensure!(r.len() <= SUSFS_MAX_UTS_LEN, "release 不能超过 64 字节");
+    ensure!(v.len() <= SUSFS_MAX_UTS_LEN, "version 不能超过 64 字节");
+    cmd.release[..r.len()].copy_from_slice(r);
+    cmd.version[..v.len()].copy_from_slice(v);
+    unsafe {
+        syscall(SYS_reboot, KSU_INSTALL_MAGIC1, SUSFS_MAGIC, CMD_SUSFS_SET_UNAME, &mut cmd as *mut _);
+    }
+    check_unsupported(cmd.err, CMD_SUSFS_SET_UNAME)?;
+    ensure!(cmd.err == 0, "设置 uname 失败（错误码 {}）", cmd.err);
+    Ok(())
+}
+
+fn set_cmdline_syscall(value: &str) -> Result<()> {
+    ensure!(value.len() < SUSFS_FAKE_CMDLINE_SIZE, "cmdline 过长");
+    let mut cmd = SusCmdline { fake: [0; SUSFS_FAKE_CMDLINE_SIZE], err: ERR_CMD_NOT_SUPPORTED };
+    let b = value.as_bytes();
+    cmd.fake[..b.len()].copy_from_slice(b);
+    unsafe {
+        syscall(SYS_reboot, KSU_INSTALL_MAGIC1, SUSFS_MAGIC, CMD_SUSFS_SET_CMDLINE_OR_BOOTCONFIG, &mut cmd as *mut _);
+    }
+    check_unsupported(cmd.err, CMD_SUSFS_SET_CMDLINE_OR_BOOTCONFIG)?;
+    ensure!(cmd.err == 0, "设置 cmdline 失败（错误码 {}）", cmd.err);
+    Ok(())
+}
+
+fn set_bool_syscall(cmd_id: u64, enabled: bool, label: &str) -> Result<()> {
+    let mut cmd = SusBool { enabled, err: ERR_CMD_NOT_SUPPORTED };
+    unsafe {
+        syscall(SYS_reboot, KSU_INSTALL_MAGIC1, SUSFS_MAGIC, cmd_id, &mut cmd as *mut _);
+    }
+    check_unsupported(cmd.err, cmd_id)?;
+    ensure!(cmd.err == 0, "设置 {label} 失败（错误码 {}）", cmd.err);
+    Ok(())
+}
+
+// ── 对管理器的公开操作 ──────────────────────────────────────
+pub fn list_paths() -> Result<()> {
+    for path in read_cfg(CFG_SUS_PATHS).unwrap_or_default().split('|').filter(|l| !l.is_empty()) {
+        println!("{path}");
+    }
+    Ok(())
+}
+
+pub fn add_path(path: &str) -> Result<()> {
+    let path = path.trim();
+    ensure!(path.starts_with('/'), "路径必须以 / 开头");
+    let mut list: Vec<String> = read_cfg(CFG_SUS_PATHS)
+        .unwrap_or_default()
+        .split('|')
+        .filter(|l| !l.is_empty())
+        .map(str::to_owned)
+        .collect();
+    if !list.iter().any(|p| p == path) {
+        list.push(path.to_owned());
+        write_cfg(CFG_SUS_PATHS, &list.join("|"))?;
+    }
+    add_sus_path_syscall(path)?;
+    println!("已隐藏：{path}");
+    Ok(())
+}
+
+pub fn remove_path(path: &str) -> Result<()> {
+    let path = path.trim();
+    let list: Vec<String> = read_cfg(CFG_SUS_PATHS)
+        .unwrap_or_default()
+        .split('|')
+        .filter(|l| !l.is_empty() && *l != path)
+        .map(str::to_owned)
+        .collect();
+    write_cfg(CFG_SUS_PATHS, &list.join("|"))?;
+    println!("已从配置移除（重启后生效）：{path}");
+    Ok(())
+}
+
+pub fn set_uname(release: &str, version: &str) -> Result<()> {
+    write_cfg(CFG_UNAME_RELEASE, release)?;
+    write_cfg(CFG_UNAME_VERSION, version)?;
+    set_uname_syscall(release, version)?;
+    println!("uname 伪装已更新");
+    Ok(())
+}
+
+pub fn set_cmdline(value: &str) -> Result<()> {
+    write_cfg(CFG_CMDLINE, value)?;
+    set_cmdline_syscall(value)?;
+    println!("cmdline 伪装已更新");
+    Ok(())
+}
+
+pub fn set_avc_log_spoof(enabled: bool) -> Result<()> {
+    write_cfg(CFG_AVC_LOG_SPOOF, if enabled { "true" } else { "false" })?;
+    set_bool_syscall(CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING, enabled, "AVC 日志伪装")?;
+    println!("AVC 日志伪装：{}", if enabled { "开" } else { "关" });
+    Ok(())
+}
+
+pub fn set_log_enabled(enabled: bool) -> Result<()> {
+    write_cfg(CFG_LOG_ENABLED, if enabled { "true" } else { "false" })?;
+    set_bool_syscall(CMD_SUSFS_ENABLE_LOG, enabled, "SUSFS 日志")?;
+    println!("SUSFS 日志：{}", if enabled { "开" } else { "关" });
+    Ok(())
+}
+
+pub fn set_hide_sus_mnts(enabled: bool) -> Result<()> {
+    write_cfg(CFG_HIDE_SUS_MNTS, if enabled { "true" } else { "false" })?;
+    set_bool_syscall(CMD_SUSFS_HIDE_SUS_MNTS_FOR_NON_SU_PROCS, enabled, "挂载隐藏")?;
+    println!("非 root 进程挂载隐藏：{}", if enabled { "开" } else { "关" });
+    Ok(())
+}
+
+/// 把已保存的配置全部下发到内核（开机 & 手动应用）
+pub fn apply_saved_config() -> Result<()> {
+    if detected_susfs_version().is_none() {
+        return Ok(());
+    }
+    if let Some(paths) = read_cfg(CFG_SUS_PATHS) {
+        for path in paths.split('|').filter(|l| !l.is_empty()) {
+            let _ = add_sus_path_syscall(path);
+        }
+    }
+    let rel = read_cfg(CFG_UNAME_RELEASE).unwrap_or_default();
+    let ver = read_cfg(CFG_UNAME_VERSION).unwrap_or_default();
+    if !rel.is_empty() {
+        let _ = set_uname_syscall(&rel, &ver);
+    }
+    if let Some(cmdline) = read_cfg(CFG_CMDLINE).filter(|c| !c.is_empty()) {
+        let _ = set_cmdline_syscall(&cmdline);
+    }
+    let _ = set_bool_syscall(CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING, cfg_bool(CFG_AVC_LOG_SPOOF), "AVC 日志伪装");
+    let _ = set_bool_syscall(CMD_SUSFS_ENABLE_LOG, cfg_bool(CFG_LOG_ENABLED), "SUSFS 日志");
+    let _ = set_bool_syscall(CMD_SUSFS_HIDE_SUS_MNTS_FOR_NON_SU_PROCS, cfg_bool(CFG_HIDE_SUS_MNTS), "挂载隐藏");
+    Ok(())
+}
+
+/// 输出管理器需要的配置快照
+pub fn show_config() -> Result<()> {
+    println!("paths={}", read_cfg(CFG_SUS_PATHS).unwrap_or_default());
+    println!("uname_release={}", read_cfg(CFG_UNAME_RELEASE).unwrap_or_default());
+    println!("uname_version={}", read_cfg(CFG_UNAME_VERSION).unwrap_or_default());
+    println!("cmdline={}", read_cfg(CFG_CMDLINE).unwrap_or_default());
+    println!("avc_log_spoof={}", cfg_bool(CFG_AVC_LOG_SPOOF));
+    println!("log_enabled={}", cfg_bool(CFG_LOG_ENABLED));
+    println!("hide_sus_mnts={}", cfg_bool(CFG_HIDE_SUS_MNTS));
     Ok(())
 }

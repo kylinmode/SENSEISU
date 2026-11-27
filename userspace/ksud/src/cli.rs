@@ -527,6 +527,31 @@ enum SusfsAction {
         #[command(subcommand)]
         command: SusfsAutoloadAction,
     },
+    /// Add a hidden path (sus_path) and persist it
+    AddPath { path: String },
+    /// Remove a hidden path from saved config (takes effect after reboot)
+    RemovePath { path: String },
+    /// List saved hidden paths
+    ListPaths,
+    /// Spoof kernel uname (release/version)
+    SetUname {
+        #[arg(long)]
+        release: String,
+        #[arg(long, default_value = "")]
+        version: String,
+    },
+    /// Spoof /proc/cmdline contents
+    SetCmdline { value: String },
+    /// Toggle AVC log spoofing
+    SetAvcLogSpoof { enabled: bool },
+    /// Toggle SUSFS kernel log
+    SetLog { enabled: bool },
+    /// Toggle hiding sus mounts from non-root processes
+    SetHideSusMnts { enabled: bool },
+    /// Re-apply all saved SUSFS settings
+    Apply,
+    /// Print saved SUSFS settings
+    Config,
     /// Show if susfs is supported
     Support,
     /// Show susfs version
@@ -860,6 +885,16 @@ pub fn run() -> Result<()> {
                     Ok(())
                 }
             },
+            SusfsAction::AddPath { path } => susfsd::add_path(&path),
+            SusfsAction::RemovePath { path } => susfsd::remove_path(&path),
+            SusfsAction::ListPaths => susfsd::list_paths(),
+            SusfsAction::SetUname { release, version } => susfsd::set_uname(&release, &version),
+            SusfsAction::SetCmdline { value } => susfsd::set_cmdline(&value),
+            SusfsAction::SetAvcLogSpoof { enabled } => susfsd::set_avc_log_spoof(enabled),
+            SusfsAction::SetLog { enabled } => susfsd::set_log_enabled(enabled),
+            SusfsAction::SetHideSusMnts { enabled } => susfsd::set_hide_sus_mnts(enabled),
+            SusfsAction::Apply => susfsd::apply_saved_config(),
+            SusfsAction::Config => susfsd::show_config(),
             SusfsAction::Support => susfsd::show_features(true),
             SusfsAction::Version => susfsd::show_version(),
             SusfsAction::Variant => susfsd::show_variant(),

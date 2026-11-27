@@ -61,6 +61,9 @@ pub fn on_post_fs_data() -> Result<()> {
     if let Err(e) = crate::susfsd::load_if_autoload_enabled() {
         warn!("SUSFS auto-load failed: {e:#}");
     }
+    if let Err(e) = crate::susfsd::apply_saved_config() {
+        warn!("SUSFS 配置下发失败: {e:#}");
+    }
 
     if let Err(e) = handle_updated_modules() {
         warn!("handle updated modules failed: {e}");

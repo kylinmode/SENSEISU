@@ -222,7 +222,7 @@ fun SenseiHomeScreen(navigator: DestinationsNavigator, bottomInnerPadding: Dp = 
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             TitleBar(
-                onLock = { runCatching { navigator.navigate(com.ramcosta.composedestinations.generated.destinations.SettingScreenDestination) } },
+                onLock = { runCatching { navigator.navigate(com.ramcosta.composedestinations.generated.destinations.SusfsPanelScreenDestination) } },
                 susfsSupported = state.susfs.isNotBlank(),
             )
             HeroArt(heroBitmap)

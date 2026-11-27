@@ -691,6 +691,27 @@ private fun SecurityCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        navigator.navigate(
+                            com.ramcosta.composedestinations.generated.destinations.SusfsPanelScreenDestination
+                        )
+                    },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                leadingContent = { Icon(Icons.Filled.Shield, null) },
+                headlineContent = {
+                    Text(
+                        text = "SUSFS 面板",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                supportingContent = { Text("隐藏路径 · 内核版本伪装 · 日志开关") }
+            )
+
+            ListItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
                     .clickable { navigator.navigate(AppProfileTemplateScreenDestination) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 leadingContent = { Icon(Icons.Outlined.Fence, null) },
