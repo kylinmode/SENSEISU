@@ -42,12 +42,26 @@ private fun readConfText(): String =
 private fun getKey(text: String, key: String): String =
     text.lines().firstOrNull { it.startsWith("$key=") }?.substringAfter("=")?.trim().orEmpty()
 
-/** 只改一个键，其余原样保留 */
-private fun setKey(key: String, value: String): Boolean {
-    val text = readConfText()
-    val lines = text.lines().filter { it.isNotBlank() && !it.startsWith("$key=") }.toMutableList()
-    lines.add("$key=$value")
-    val body = lines.filter { it.isNotBlank() }.joinToString("\n") + "\n"
+/** 按界面状态整份写入（不依赖读文件，避免读失败导致清空） */
+private fun writeModel(
+    paths: List<String>,
+    unameRelease: String,
+    unameVersion: String,
+    cmdline: String,
+    avc: Boolean,
+    log: Boolean,
+    hideMnts: Boolean,
+): Boolean {
+    val body = buildString {
+        appendLine("# SenseiSU SUSFS 配置（管理器编辑，ksud susfs apply 生效）")
+        appendLine("paths=" + paths.joinToString("|"))
+        appendLine("uname_release=" + unameRelease)
+        appendLine("uname_version=" + unameVersion)
+        appendLine("cmdline=" + cmdline)
+        appendLine("avc_log_spoof=" + avc)
+        appendLine("log_enabled=" + log)
+        appendLine("hide_sus_mnts=" + hideMnts)
+    }
     val b64 = android.util.Base64.encodeToString(body.toByteArray(), android.util.Base64.NO_WRAP)
     return runCatching {
         ShellUtils.fastCmd("mkdir -p /data/adb/ssu && echo $b64 | base64 -d > $SUSFS_CONF && chmod 600 $SUSFS_CONF")
@@ -110,13 +124,18 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
             version = data[0].trim()
             variant = data[1].trim()
             features = data[2].lines().map { it.trim() }.filter { it.startsWith("CONFIG_KSU_SUSFS") }.toSet()
-            paths = data[3].split("|").filter { it.isNotBlank() }
-            unameRelease = data[4]
-            unameVersion = data[5]
+            val fileHasPaths = data[3].isNotBlank()
+            if (fileHasPaths || paths.isEmpty()) {
+                paths = data[3].split("|").filter { it.isNotBlank() }
+            }
+            unameRelease = data[4].ifBlank { unameRelease }
+            unameVersion = data[5].ifBlank { unameVersion }
             cmdline = data[6]
-            avcSpoof = data[7] == "true"
-            logEnabled = data[8] == "true"
-            hideMnts = data[9] == "true"
+            if (fileHasPaths) {
+                avcSpoof = data[7] == "true"
+                logEnabled = data[8] == "true"
+                hideMnts = data[9] == "true"
+            }
         }
     }
 
@@ -261,7 +280,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                             ) {
                                 Text(p, fontSize = 12.sp, modifier = Modifier.weight(1f))
                                 IconButton(onClick = {
-                                    setKey("paths", (paths - p).joinToString("|"))
+                                    paths = paths - p
+                                    writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                                     exec("已从配置移除 $p", "susfs apply")
                                 }) {
                                     Icon(Icons.Filled.Close, contentDescription = "移除", modifier = Modifier.size(16.dp))
@@ -297,8 +317,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = {
                                 editing = false
-                                setKey("uname_release", unameRelease)
-                                setKey("uname_version", unameVersion.ifBlank { "#1 SMP PREEMPT" })
+                                unameVersion = unameVersion.ifBlank { "#1 SMP PREEMPT" }
+                                writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                                 exec("uname 已更新", "susfs apply")
                             }, shape = RoundedCornerShape(12.dp)) { Text("保存并应用") }
                             OutlinedButton(onClick = { editing = false }, shape = RoundedCornerShape(12.dp)) { Text("取消") }
@@ -310,8 +330,7 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                                 val real = runCatching { ShellUtils.fastCmd("uname -r") }.getOrDefault("").trim()
                                 unameRelease = real.ifBlank { "6.6.89-android15" }
                                 unameVersion = "#1 SMP PREEMPT"
-                                setKey("uname_release", unameRelease)
-                                setKey("uname_version", unameVersion)
+                                writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                                 exec("uname 已更新", "susfs apply")
                             }, shape = RoundedCornerShape(12.dp)) { Text("用当前版本号") }
                         }
@@ -330,7 +349,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                         checked = avcSpoof && hasAvcFeature,
                         enabled = hasAvcFeature && !busy,
                     ) { on ->
-                        setKey("avc_log_spoof", on.toString())
+                        avcSpoof = on
+                        writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                         exec("已保存（内核不支持该项）", "susfs apply")
                     }
 
@@ -340,7 +360,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                         checked = logEnabled,
                         enabled = features.contains("CONFIG_KSU_SUSFS_ENABLE_LOG") && !busy,
                     ) { on ->
-                        setKey("log_enabled", on.toString())
+                        logEnabled = on
+                        writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                         exec("内核日志已${if (on) "开启" else "关闭"}", "susfs apply")
                     }
 
@@ -350,7 +371,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                         checked = hideMnts,
                         enabled = features.contains("CONFIG_KSU_SUSFS_SUS_MOUNT") && !busy,
                     ) { on ->
-                        setKey("hide_sus_mnts", on.toString())
+                        hideMnts = on
+                        writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                         exec("挂载隐藏已${if (on) "开启" else "关闭"}", "susfs apply")
                     }
                 }
@@ -435,7 +457,8 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
                     val p = input.trim()
                     if (p.startsWith("/")) {
                         showAdd = false
-                        setKey("paths", (paths + p).distinct().joinToString("|"))
+                        paths = (paths + p).distinct()
+                        writeModel(paths, unameRelease, unameVersion, cmdline, avcSpoof, logEnabled, hideMnts)
                         exec("已隐藏 $p", "susfs apply")
                     }
                 }) { Text("添加") }
