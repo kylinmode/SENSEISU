@@ -543,11 +543,20 @@ enum SusfsAction {
     /// Spoof /proc/cmdline contents
     SetCmdline { value: String },
     /// Toggle AVC log spoofing
-    SetAvcLogSpoof { enabled: bool },
+    SetAvcLogSpoof {
+        #[arg(action = clap::ArgAction::Set)]
+        enabled: bool,
+    },
     /// Toggle SUSFS kernel log
-    SetLog { enabled: bool },
+    SetLog {
+        #[arg(action = clap::ArgAction::Set)]
+        enabled: bool,
+    },
     /// Toggle hiding sus mounts from non-root processes
-    SetHideSusMnts { enabled: bool },
+    SetHideSusMnts {
+        #[arg(action = clap::ArgAction::Set)]
+        enabled: bool,
+    },
     /// Re-apply all saved SUSFS settings
     Apply,
     /// Print saved SUSFS settings

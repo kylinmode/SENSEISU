@@ -67,7 +67,8 @@ fun SenseiLocalFlashContent() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(16.dp)
+            .padding(bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Card(shape = RoundedCornerShape(16.dp)) {

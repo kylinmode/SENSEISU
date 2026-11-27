@@ -89,6 +89,29 @@ fun createRootShell(globalMnt: Boolean = false): Shell {
     }
 }
 
+fun ksudPathForDiagnostics(): String = runCatching {
+    ksuApp.applicationInfo.nativeLibraryDir + File.separator + "libksud.so"
+}.getOrDefault("ksud")
+
+/** 直接执行任意 root 命令，返回合并输出（诊断用） */
+fun execKsudOutputRaw(command: String): String = runCatching {
+    val shell = createRootShell(true)
+    val out = ArrayList<String>()
+    val err = ArrayList<String>()
+    shell.newJob().add("$command 2>&1").to(out, err).exec()
+    (out + err).joinToString("\n").trim()
+}.getOrDefault("")
+
+fun execKsudOutput(args: String): String {
+    return runCatching {
+        val shell = createRootShell(true)
+        val out = ArrayList<String>()
+        val err = ArrayList<String>()
+        shell.newJob().add("${getKsuDaemonPath()} $args 2>&1").to(out, err).exec()
+        (out + err).joinToString("\n").trim()
+    }.getOrDefault("")
+}
+
 fun execKsud(args: String, newShell: Boolean = false, globalMnt: Boolean = false): Boolean {
     return if (newShell) {
         withNewRootShell(globalMnt = globalMnt) {
