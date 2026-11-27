@@ -39,8 +39,11 @@ private fun ksudPath(): String = com.senseisu.ssu.ui.util.ksudPathForDiagnostics
 
 private fun readConfText(): String = runCatching {
     ShellUtils.fastCmd(
-        "if [ ! -f $SUSFS_CONF ] && [ -f $SUSFS_CONF_LEGACY ]; then " +
-            "mkdir -p /data/ssu && cp $SUSFS_CONF_LEGACY $SUSFS_CONF; fi; " +
+        "mkdir -p /data/ssu; " +
+            "if [ ! -s $SUSFS_CONF ]; then " +
+            "  if [ -s /sdcard/senseisu/ssu3/susfs.conf ]; then cp /sdcard/senseisu/ssu3/susfs.conf $SUSFS_CONF; " +
+            "  elif [ -s $SUSFS_CONF_LEGACY ]; then cp $SUSFS_CONF_LEGACY $SUSFS_CONF; fi; " +
+            "fi; " +
             "cat $SUSFS_CONF 2>/dev/null"
     )
 }.getOrDefault("")
@@ -145,7 +148,13 @@ fun SusfsPanelScreen(navigator: DestinationsNavigator) {
         }
     }
 
+    val modelEmpty = paths.isEmpty() && unameRelease.isBlank() && unameVersion.isBlank()
+
     fun exec(label: String, cmd: String, optimistic: (() -> Unit)? = null) {
+        if (modelEmpty && cmd.startsWith("susfs apply")) {
+            scope.launch { snackbar.showSnackbar("配置还没加载，先点「从 /sdcard 导入」") }
+            return
+        }
         busy = true
         optimistic?.invoke()
         scope.launch {
